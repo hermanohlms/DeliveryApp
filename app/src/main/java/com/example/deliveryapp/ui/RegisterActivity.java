@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
+import com.example.deliveryapp.BuildConfig;
 import com.example.deliveryapp.R;
 import com.example.deliveryapp.data.Branch;
 import com.example.deliveryapp.data.Models;
@@ -27,7 +28,7 @@ public class RegisterActivity extends BaseActivity {
      * false = the customer just types their address (no Google Maps / Places needed to sign up).
      * (Default: true = Google-validated address.)
      */
-    private static final boolean USE_GOOGLE_ADDRESS = true;
+    private static final boolean USE_GOOGLE_ADDRESS = !BuildConfig.MAPS_API_KEY.trim().isEmpty();
 
     private TextInputEditText etHouse, etStreet, etArea, etCity;
     private View manualAddress;
@@ -48,6 +49,7 @@ public class RegisterActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
         setupToolbar("Create account");
+        findViewById(R.id.btnLoginLink).setOnClickListener(v -> { startActivity(new Intent(this, LoginActivity.class)); finish(); });
 
         etFirst = findViewById(R.id.etFirstName);
         etLast = findViewById(R.id.etLastName);
@@ -66,6 +68,8 @@ public class RegisterActivity extends BaseActivity {
         Ui.show(manualAddress, !USE_GOOGLE_ADDRESS);
         Ui.show(address, USE_GOOGLE_ADDRESS);
         rbUitzicht = findViewById(R.id.rbUitzicht);
+        ((RadioButton) findViewById(R.id.rbKenridge)).setChecked(Prefs.get().getBranch() == Branch.KENRIDGE);
+        rbUitzicht.setChecked(Prefs.get().getBranch() == Branch.UITZICHT);
         tvMessage = findViewById(R.id.tvMessage);
         btnCreate = findViewById(R.id.btnCreate);
 
@@ -158,14 +162,14 @@ public class RegisterActivity extends BaseActivity {
                 Prefs.get().setBranch(Branch.fromName(req.preferredStore));
                 if (auth != null && auth.accessToken != null) {
                     Prefs.get().saveSession(auth, email);
-                    openMain();
+                    openLanding();
                 } else {
                     // The server created the account but sent no token: sign in with the same details.
                     Repo.get().login(email, password, new Repo.Result<Models.AuthResponse>() {
                         @Override public void onSuccess(Models.AuthResponse a2) {
                             if (dead()) return;
                             Prefs.get().saveSession(a2, email);
-                            openMain();
+                            openLanding();
                         }
                         @Override public void onError(String m, int code) {
                             if (dead()) return;
@@ -191,8 +195,9 @@ public class RegisterActivity extends BaseActivity {
         Prefs.get().saveProfile(p);
     }
 
-    private void openMain() {
-        Intent i = new Intent(this, MainActivity.class);
+    private void openLanding() {
+        Intent i = new Intent(this, LandingActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(i);
         finish();

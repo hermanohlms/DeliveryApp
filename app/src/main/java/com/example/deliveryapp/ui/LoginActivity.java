@@ -25,8 +25,9 @@ public class LoginActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (Prefs.get().isLoggedIn()) { openMain(); return; }
+        if (Prefs.get().isLoggedIn()) { openLanding(); return; }
         setContentView(R.layout.activity_login);
+        findViewById(R.id.btnHome).setOnClickListener(v -> finish());
 
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
@@ -47,8 +48,9 @@ public class LoginActivity extends BaseActivity {
         findViewById(R.id.btnRegister).setOnClickListener(v -> startActivity(new Intent(this, RegisterActivity.class)));
     }
 
-    private void openMain() {
-        Intent i = new Intent(this, MainActivity.class);
+    private void openLanding() {
+        Intent i = new Intent(this, LandingActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(i);
         finish();
@@ -83,7 +85,7 @@ public class LoginActivity extends BaseActivity {
                     return;
                 }
                 Prefs.get().saveSession(auth, email);
-                openMain();
+                openLanding();
             }
             @Override public void onError(String m, int code) {
                 if (dead()) return;

@@ -4,21 +4,24 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:background="@color/gunmetal" android:orientation="vertical" android:padding="24dp"
         android:paddingTop="36dp" android:paddingBottom="36dp">
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Hungry?"
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pete’s Pizza"
             android:textColor="@color/terracotta" android:textSize="40sp" android:textStyle="bold" />
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Order from your favourite branch, delivered to your door." android:textColor="#D9FFFFFF" />
+            android:text="Kenridge &amp; Uitzicht Branch" android:textColor="#D9FFFFFF" />
     </LinearLayout>
     <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
         android:fillViewport="true">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             android:orientation="vertical" android:padding="24dp">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Log in"
+            <com.google.android.material.button.MaterialButton style="@style/Widget.Material3.Button.TextButton"
+                android:id="@+id/btnHome" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="end" android:text="Home" android:textColor="@color/steel_blue" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Login"
                 android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" android:textStyle="bold" />
             <com.google.android.material.textfield.TextInputLayout
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" android:hint="Email" >
+        android:layout_marginTop="16dp" android:hint="Email address" >
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etEmail" android:layout_width="match_parent" android:layout_height="wrap_content"
             android:inputType="textEmailAddress" android:maxLines="1"/>
@@ -35,7 +38,7 @@
         android:layout_marginTop="12dp" android:visibility="gone" />
             <com.google.android.material.button.MaterialButton 
         android:id="@+id/btnLogin" android:layout_width="match_parent" android:layout_height="56dp"
-        android:layout_marginTop="16dp" android:text="Log in" android:textStyle="bold" />
+        android:layout_marginTop="16dp" android:text="Login" android:textStyle="bold" />
             <com.google.android.material.button.MaterialButton style="@style/Widget.Material3.Button.TextButton"
                 android:id="@+id/btnForgot" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:text="Forgot password?" android:textColor="@color/steel_blue" />
