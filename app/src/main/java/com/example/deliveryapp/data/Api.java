@@ -55,7 +55,7 @@ public interface Api {
 
     /** NEW: the signed-in customer's own orders, newest first. */
     @GET("api/orders/mine")
-    Call<List<Models.OrderResponse>> myOrders();
+    Call<List<Models.OrderHistoryEntry>> myOrders();
 
     /** NEW: the signed-in customer's profile. */
     @GET("api/me")

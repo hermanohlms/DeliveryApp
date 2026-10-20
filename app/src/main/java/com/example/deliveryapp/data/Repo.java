@@ -291,7 +291,7 @@ public final class Repo {
     }
 
     /** NEW endpoint; callers fall back to the phone's own history when {@link #isUnsupported(int)}. */
-    public void myOrders(Result<List<Models.OrderResponse>> cb) { if (DemoData.isActive()) { demo(cb, DemoData.myOrders()); return; } run(api.myOrders(), "orders", cb); }
+    public void myOrders(Result<List<Models.OrderHistoryEntry>> cb) { if (DemoData.isActive()) { demo(cb, DemoData.myOrders()); return; } run(api.myOrders(), "orders", cb); }
 
     // ------------------------------------------------------------------ profile (NEW endpoints)
     public void me(Result<Models.Profile> cb) { if (DemoData.isActive()) { demo(cb, DemoData.profile()); return; } run(api.me(), "me", cb); }

@@ -353,34 +353,27 @@ public final class DemoData {
     }
 
     /** Orders placed in demo mode (status follows each order's age), plus one sample past order. */
-    public static List<Models.OrderResponse> myOrders() {
-        List<Models.OrderResponse> list = new ArrayList<>();
+    public static List<Models.OrderHistoryEntry> myOrders() {
+        List<Models.OrderHistoryEntry> list = new ArrayList<>();
         for (Models.PastOrder p : Prefs.get().getHistory()) {
-            Models.OrderResponse o = new Models.OrderResponse();
+            Models.OrderHistoryEntry o = new Models.OrderHistoryEntry();
             o.id = p.id;
             o.status = demoStatus(p);
             o.branchName = p.branchName;
             o.orderType = p.orderType;
             o.createdAt = Money.dateTime(p.placedAtMillis);
             o.total = p.estimatedTotal;
-            o.items = new ArrayList<>();
-            for (String line : Models.nz(p.lines)) {
-                Models.OrderLine l = new Models.OrderLine();
-                l.name = line; l.quantity = 0;   // 0 = show the text as is
-                o.items.add(l);
-            }
+            o.itemLines = new ArrayList<>(Models.nz(p.lines));
             list.add(o);
         }
-        Models.OrderResponse sample = new Models.OrderResponse();
+        Models.OrderHistoryEntry sample = new Models.OrderHistoryEntry();
         sample.id = 1001;
         sample.status = "Delivered";
         sample.branchName = "Kenridge";
         sample.orderType = "delivery";
         sample.createdAt = "Sample order";
         sample.total = 218.0;
-        Models.OrderLine l1 = new Models.OrderLine(); l1.name = "1× Pepperoni (30cm · Classic)"; l1.quantity = 0;
-        Models.OrderLine l2 = new Models.OrderLine(); l2.name = "1× Coca-Cola"; l2.quantity = 0;
-        sample.items = Arrays.asList(l1, l2);
+        sample.itemLines = Arrays.asList("1× Pepperoni (30cm · Classic)", "1× Coca-Cola");
         list.add(sample);
         return list;
     }

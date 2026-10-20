@@ -283,13 +283,24 @@ public final class Models {
         public List<OrderLine> items;
     }
 
+    /** Customer-safe summary returned by GET /api/orders/mine. */
+    public static class OrderHistoryEntry {
+        public long id;
+        public String createdAt;
+        public String branchName;
+        public String status;
+        public String orderType;
+        public List<String> itemLines;
+        public Double total;
+    }
+
     public static class OrderLine {
         public String name;
         public int quantity;
         public String detail;
     }
 
-    /** Orders remembered on this phone (fallback until the backend has GET /api/orders/mine). */
+    /** Orders remembered on this phone for offline order-history fallback. */
     public static class PastOrder {
         public long id;
         public String branchName;

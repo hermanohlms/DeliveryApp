@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Shows the customer's orders. Uses GET /api/orders/mine when the server has it (live status);
- * otherwise falls back to the orders remembered on this phone.
+ * Shows the customer's server order history, falling back to this phone's saved
+ * orders when the network is unavailable.
  */
 public class OrdersFragment extends Fragment {
     private SwipeRefreshLayout swipe;
@@ -62,8 +62,8 @@ public class OrdersFragment extends Fragment {
     private void load() {
         final int gen = ++generation;
         swipe.setRefreshing(true);
-        Repo.get().myOrders(new Repo.Result<List<Models.OrderResponse>>() {
-            @Override public void onSuccess(List<Models.OrderResponse> list) {
+        Repo.get().myOrders(new Repo.Result<List<Models.OrderHistoryEntry>>() {
+            @Override public void onSuccess(List<Models.OrderHistoryEntry> list) {
                 if (gen != generation || !isAdded() || getView() == null) return;
                 swipe.setRefreshing(false);
                 showServer(Models.nz(list));
@@ -78,21 +78,14 @@ public class OrdersFragment extends Fragment {
         });
     }
 
-    private void showServer(List<Models.OrderResponse> list) {
+    private void showServer(List<Models.OrderHistoryEntry> list) {
         List<OrdersAdapter.OrderRow> rows = new ArrayList<>();
-        for (Models.OrderResponse o : list) {
+        for (Models.OrderHistoryEntry o : list) {
             OrdersAdapter.OrderRow r = new OrdersAdapter.OrderRow();
             r.id = o.id;
             r.status = o.status;
             r.meta = join(o.createdAt, o.branchName, capitalize(o.orderType));
-            StringBuilder sb = new StringBuilder();
-            for (Models.OrderLine l : Models.nz(o.items)) {
-                if (sb.length() > 0) sb.append('\n');
-                if (l.quantity > 0) sb.append(l.quantity).append("× ");
-                sb.append(l.name);
-                if (l.detail != null && !l.detail.isEmpty()) sb.append(" (").append(l.detail).append(')');
-            }
-            r.lines = sb.toString();
+            r.lines = String.join("\n", Models.nz(o.itemLines));
             r.total = o.total == null ? null : "Total " + Money.rand(o.total);
             r.trackable = isActive(o.status);
             rows.add(r);
