@@ -14,6 +14,7 @@ import java.util.List;
  * !! Before releasing the app to real customers set ENABLED = false (it is a login that skips the server). !!
  */
 public final class DemoData {
+
     private DemoData() {}
 
     public static final boolean ENABLED = false;
