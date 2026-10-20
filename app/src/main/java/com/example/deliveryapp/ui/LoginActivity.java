@@ -15,6 +15,8 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.Locale;
+
 public class LoginActivity extends BaseActivity {
     private TextInputEditText etEmail, etPassword;
     private TextView tvMessage;
@@ -27,7 +29,12 @@ public class LoginActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         if (Prefs.get().isLoggedIn()) { openLanding(); return; }
         setContentView(R.layout.activity_login);
-        findViewById(R.id.btnHome).setOnClickListener(v -> finish());
+        findViewById(R.id.btnHome).setOnClickListener(v -> {
+            Intent home = new Intent(this, LandingActivity.class);
+            home.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(home);
+            finish();
+        });
 
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
@@ -77,7 +84,7 @@ public class LoginActivity extends BaseActivity {
                 if (dead()) return;
                 boolean customer = auth.roles == null || auth.roles.isEmpty();
                 if (!customer) {
-                    for (String r : auth.roles) if (r != null && r.toUpperCase().contains("USER")) customer = true;
+                    for (String r : auth.roles) if (r != null && r.toUpperCase(Locale.ROOT).contains("USER")) customer = true;
                 }
                 if (!customer) {
                     reset();

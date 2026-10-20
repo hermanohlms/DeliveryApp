@@ -78,6 +78,6 @@ public class LandingActivity extends BaseActivity {
 
     private void openOrdering() {
         startActivity(new Intent(this, MainActivity.class));
-        finish();
+        if (Prefs.get().isLoggedIn()) finish();
     }
 }

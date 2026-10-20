@@ -17,7 +17,7 @@
                     <TextView android:id="@+id/tvBranch" android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:textColor="@color/white" android:textSize="18sp" android:textStyle="bold" />
                     <ImageView android:layout_width="24dp" android:layout_height="24dp"
-                        android:src="@drawable/ic_arrow_drop_down" android:tint="@color/white"
+                        android:src="@drawable/ic_arrow_drop_down" app:tint="@color/white"
                         android:contentDescription="Change branch" />
                 </LinearLayout>
             </LinearLayout>
@@ -30,7 +30,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless" android:clickable="true" android:focusable="true"
                 android:contentDescription="Cart">
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
-                    android:src="@drawable/ic_cart" android:tint="@color/white" />
+                    android:src="@drawable/ic_cart" app:tint="@color/white" />
                 <TextView android:id="@+id/tvBadge" android:layout_width="18dp" android:layout_height="18dp"
                     android:layout_gravity="top|end" android:layout_marginTop="6dp" android:layout_marginEnd="4dp"
                     android:background="@drawable/bg_badge" android:gravity="center" android:textColor="@color/white"

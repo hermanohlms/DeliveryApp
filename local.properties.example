@@ -7,8 +7,10 @@
 #   Production -> https://your-domain/
 API_BASE_URL=http://10.0.2.2:8080/
 
-# Google Cloud key with "Places API (New)" enabled (same project the website uses).
-# Also enable "Maps SDK for Android" on it for the order-tracking map.
+# Use a separate Android-restricted key, not the backend/website referrer-restricted key.
+# Restrict it to package com.example.deliveryapp and this build's signing certificate SHA-1.
+# Limit API access to Places API (New) and Maps SDK for Android.
+# Add release signing certificate SHA-1 separately before distributing a release build.
 MAPS_API_KEY=
 
 # Optional. "false" hides the PayFast option at checkout (cash only). Default: true.

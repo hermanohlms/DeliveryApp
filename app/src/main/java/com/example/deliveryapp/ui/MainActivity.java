@@ -54,6 +54,7 @@ public class MainActivity extends BaseActivity {
 
     private void configureSession() {
         boolean signedIn = Prefs.get().isLoggedIn();
+        if (!signedIn && !Cart.get().isEmpty()) Cart.get().clear();
         ((TextView) findViewById(R.id.tvBranchLabel)).setText(signedIn ? "Ordering from" : "Browsing menu from");
         findViewById(R.id.cartButton).setVisibility(signedIn ? View.VISIBLE : View.GONE);
         findViewById(R.id.btnGuestLogin).setVisibility(signedIn ? View.GONE : View.VISIBLE);
