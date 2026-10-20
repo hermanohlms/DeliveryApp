@@ -16,7 +16,7 @@ import java.util.List;
 public final class DemoData {
     private DemoData() {}
 
-    public static final boolean ENABLED = true;
+    public static final boolean ENABLED = false;
     public static final String EMAIL = "demo@delivery.app";
     public static final String PASSWORD = "Demo@1234";
     static final String TOKEN = "demo-token";

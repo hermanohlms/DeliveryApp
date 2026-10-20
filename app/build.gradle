@@ -7,9 +7,9 @@ def lp = rootProject.file('local.properties')
 if (lp.exists()) {
     lp.withInputStream { localProps.load(it) }
 }
-def apiBase = localProps.getProperty('API_BASE_URL', 'http://10.0.2.2:8080/')
+def apiBase = localProps.getProperty('API_BASE_URL', 'https://api.crowdcam.co.za/')
 def mapsKey = localProps.getProperty('MAPS_API_KEY', '')
-def payFastEnabled = localProps.getProperty('PAYFAST_ENABLED', 'true').toBoolean()
+def payFastEnabled = localProps.getProperty('PAYFAST_ENABLED', 'false').toBoolean()
 
 android {
     namespace 'com.example.deliveryapp'

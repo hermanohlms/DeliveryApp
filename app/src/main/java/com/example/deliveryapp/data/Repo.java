@@ -37,13 +37,14 @@ public final class Repo {
     private static Repo instance;
 
     public static synchronized Repo init(Context context) {
-        if (instance == null) instance = new Repo();
+        if (instance == null) instance = new Repo(context.getApplicationContext());
         return instance;
     }
 
     public static Repo get() { return instance; }
 
     private final Api api;
+    private final MenuCacheDb catalogDb;
     private final Gson gson = new Gson();
     private final Map<Integer, List<Models.MenuItem>> menuCache = new HashMap<>();
     private final Handler main = new Handler(Looper.getMainLooper());
@@ -53,7 +54,8 @@ public final class Repo {
         main.postDelayed(() -> cb.onSuccess(value), 250);
     }
 
-    private Repo() {
+    private Repo(Context context) {
+        catalogDb = new MenuCacheDb(context);
         OkHttpClient.Builder http = new OkHttpClient.Builder()
                 .connectTimeout(20, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
@@ -191,19 +193,41 @@ public final class Repo {
     }
 
     // ------------------------------------------------------------------ menu
-    public void pizzas(int branchId, Result<Models.PizzaCategorySplit> cb) { if (DemoData.isActive()) { demo(cb, DemoData.pizzas()); return; } run(api.pizzas(branchId), "pizzas", cb); }
+    public void pizzas(int branchId, Result<Models.PizzaCategorySplit> cb) {
+        final String key = "pizzas:" + branchId;
+        run(api.pizzas(branchId), "pizzas", new Result<Models.PizzaCategorySplit>() {
+            @Override public void onSuccess(Models.PizzaCategorySplit value) {
+                Models.PizzaCategorySplit result = value == null ? new Models.PizzaCategorySplit() : value;
+                catalogDb.putJson(key, gson.toJson(result));
+                cb.onSuccess(result);
+            }
+            @Override public void onError(String message, int code) {
+                String cached = catalogDb.getJson(key);
+                if (cached != null) {
+                    try { cb.onSuccess(gson.fromJson(cached, Models.PizzaCategorySplit.class)); return; }
+                    catch (Exception ignored) { }
+                }
+                cb.onError(message, code);
+            }
+        });
+    }
 
     public void menu(final int branchId, boolean force, final Result<List<Models.MenuItem>> cb) {
         List<Models.MenuItem> cached = menuCache.get(branchId);
+        if (cached == null) cached = catalogDb.getMenu(branchId, gson);
         if (DemoData.isActive()) { demo(cb, DemoData.menuItems()); return; }
-        if (!force && cached != null) { cb.onSuccess(cached); return; }
+        final List<Models.MenuItem> stale = cached;
         run(api.menuItems(branchId), "menu", new Result<List<Models.MenuItem>>() {
             @Override public void onSuccess(List<Models.MenuItem> value) {
                 List<Models.MenuItem> list = Models.nz(value);
                 menuCache.put(branchId, list);
+                catalogDb.saveMenu(branchId, list, gson);
                 cb.onSuccess(list);
             }
-            @Override public void onError(String message, int code) { cb.onError(message, code); }
+            @Override public void onError(String message, int code) {
+                if (stale != null) cb.onSuccess(stale);
+                else cb.onError(message, code);
+            }
         });
     }
 
@@ -220,8 +244,21 @@ public final class Repo {
     }
 
     public void pizzaDetail(int branchId, int pizzaId, Integer sizeCm, Result<Models.PizzaDetail> cb) {
-        if (DemoData.isActive()) { demo(cb, DemoData.pizzaDetail(pizzaId, sizeCm)); return; }
-        run(api.pizzaDetail(branchId, pizzaId, sizeCm), "pizza", cb);
+        final String key = "pizza:" + branchId + ":" + pizzaId + ":" + (sizeCm == null ? 0 : sizeCm);
+        run(api.pizzaDetail(branchId, pizzaId, sizeCm), "pizza", new Result<Models.PizzaDetail>() {
+            @Override public void onSuccess(Models.PizzaDetail value) {
+                if (value != null) catalogDb.putJson(key, gson.toJson(value));
+                cb.onSuccess(value);
+            }
+            @Override public void onError(String message, int code) {
+                String cached = catalogDb.getJson(key);
+                if (cached != null) {
+                    try { cb.onSuccess(gson.fromJson(cached, Models.PizzaDetail.class)); return; }
+                    catch (Exception ignored) { }
+                }
+                cb.onError(message, code);
+            }
+        });
     }
 
     public void quote(int branchId, int pizzaId, Models.QuoteRequest req, Result<Models.QuoteResponse> cb) {
