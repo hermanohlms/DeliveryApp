@@ -1,0 +1,16 @@
+# Add these two lines to local.properties (Android Studio creates that file with sdk.dir).
+# Never commit local.properties.
+
+# Where the Spring Boot backend lives.
+#   Android emulator  -> http://10.0.2.2:8080/
+#   Real phone on Wi-Fi -> http://<your-computer-ip>:8080/
+#   Production -> https://your-domain/
+API_BASE_URL=http://10.0.2.2:8080/
+
+# Google Cloud key with "Places API (New)" enabled (same project the website uses).
+# Also enable "Maps SDK for Android" on it for the order-tracking map.
+MAPS_API_KEY=
+
+# Optional. "false" hides the PayFast option at checkout (cash only). Default: true.
+# PayFast merchant id / key / passphrase are NOT app settings - they live on the backend only.
+#PAYFAST_ENABLED=true

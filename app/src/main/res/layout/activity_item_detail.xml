@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar" style="@style/Widget.App.Toolbar"
+        android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
+        app:navigationIcon="@drawable/ic_arrow_back" app:title="Item" />
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+        <ScrollView android:id="@+id/content" android:layout_width="match_parent" android:layout_height="match_parent"
+            android:visibility="gone">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="16dp">
+                <TextView android:id="@+id/tvDesc" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textColor="?attr/colorOutline" />
+                <LinearLayout android:id="@+id/sections" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" android:layout_marginBottom="4dp" android:text="Notes for the kitchen"
+        android:textAppearance="@style/Text.Section" />
+                <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="0dp" android:hint="Optional" >
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etNotes" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:inputType="textMultiLine|textCapSentences" android:minLines="2" android:maxLength="1000"/>
+    </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+        </ScrollView>
+        <ProgressBar android:id="@+id/progress" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_gravity="center" android:indeterminateTint="?attr/colorPrimary" />
+        <LinearLayout android:id="@+id/errorGroup" android:layout_width="match_parent" android:layout_height="match_parent"
+            android:gravity="center" android:orientation="vertical" android:padding="32dp" android:visibility="gone">
+            <TextView android:id="@+id/tvError" android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnRetry" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Try again" />
+        </LinearLayout>
+    </FrameLayout>
+    <include android:id="@+id/addBar" layout="@layout/view_add_bar" />
+</LinearLayout>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.DeliveryApp" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/terracotta</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">#5B2018</item>
+        <item name="colorOnPrimaryContainer">@color/white</item>
+        <item name="colorSecondary">@color/steel_blue</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">#1F3F5A</item>
+        <item name="colorOnSecondaryContainer">@color/white</item>
+        <item name="colorTertiary">#D5D9DB</item>
+        <item name="colorSurface">#2B2F31</item>
+        <item name="colorOnSurface">#F1F3F4</item>
+        <item name="colorSurfaceVariant">@color/gunmetal</item>
+        <item name="colorOnSurfaceVariant">#E3E6E8</item>
+        <item name="colorOutline">#9AA1A5</item>
+        <item name="android:colorBackground">#212527</item>
+        <item name="android:textColorPrimary">#F1F3F4</item>
+        <item name="android:statusBarColor">@color/gunmetal</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

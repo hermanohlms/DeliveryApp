@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:layout_marginStart="16dp" android:layout_marginEnd="16dp" android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp" android:clickable="true" android:focusable="true"
+    app:cardBackgroundColor="?attr/colorSurface" app:cardElevation="1dp" app:strokeWidth="0dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical" android:orientation="horizontal" android:padding="16dp">
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView android:id="@+id/tvName" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium" android:textStyle="bold" />
+            <TextView android:id="@+id/tvSub" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:ellipsize="end" android:maxLines="2" android:textColor="?attr/colorOutline" android:textSize="13sp" />
+            <TextView android:id="@+id/tvTag" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textColor="@color/steel_blue" android:textSize="12sp" android:textStyle="bold" android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginStart="12dp" android:gravity="end" android:orientation="vertical">
+            <TextView android:id="@+id/tvFrom" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="from" android:textColor="?attr/colorOutline" android:textSize="11sp" android:visibility="gone" />
+            <TextView android:id="@+id/tvPrice" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textColor="@color/terracotta" android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
