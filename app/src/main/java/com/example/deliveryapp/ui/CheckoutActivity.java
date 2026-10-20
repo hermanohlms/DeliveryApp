@@ -13,6 +13,7 @@ import com.example.deliveryapp.BuildConfig;
 import com.example.deliveryapp.R;
 import com.example.deliveryapp.data.Branch;
 import com.example.deliveryapp.data.Cart;
+import com.example.deliveryapp.data.CheckoutCatalogValidator;
 import com.example.deliveryapp.data.Models;
 import com.example.deliveryapp.data.Prefs;
 import com.example.deliveryapp.data.Repo;
@@ -191,9 +192,34 @@ public class CheckoutActivity extends BaseActivity {
             req.deliveryAddress.complexName = complex;
         }
         req.items = new ArrayList<>();
-        for (Cart.Line l : pending.lines) req.items.add(l.request.copyWithQuantity(l.quantity));
+        req.specialItems = new ArrayList<>();
+        for (Cart.Line l : pending.lines) {
+            if (l.request != null) req.items.add(l.request.copyWithQuantity(l.quantity));
+            else if (l.specialRequest != null) req.specialItems.add(l.specialRequest.copyWithQuantity(l.quantity));
+        }
         pending.req = req;
 
+        btnPlace.setEnabled(false);
+        btnPlace.setText("Checking current menu…");
+        new CheckoutCatalogValidator(Repo.get(), pending.branch.id, pending.lines)
+                .run(new Repo.Result<Void>() {
+                    @Override public void onSuccess(Void ignored) {
+                        if (dead()) return;
+                        pending.estimate = Cart.get().total();
+                        buildSummary();
+                        updateTotal();
+                        submitValidatedOrder(online);
+                    }
+                    @Override public void onError(String error, int code) {
+                        if (dead()) return;
+                        pending = null;
+                        paymentNotDone("Could not verify the cart: " + error + " Please edit or retry.");
+                    }
+                });
+    }
+
+    private void submitValidatedOrder(boolean online) {
+        Models.OrderRequest req = pending.req;
         // Same request => same idempotency key, so retrying after a timeout (or a cancelled payment) can't create a duplicate order.
         int hash = new Gson().toJson(req).hashCode();
         if (lastKey == null || hash != lastHash) {
@@ -201,7 +227,6 @@ public class CheckoutActivity extends BaseActivity {
             lastKey = Repo.get().newIdempotencyKey();
         }
 
-        btnPlace.setEnabled(false);
         if (online) startPayFast();
         else placeCashOrder();
     }

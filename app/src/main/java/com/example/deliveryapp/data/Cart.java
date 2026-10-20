@@ -13,14 +13,20 @@ public final class Cart {
     public static class Line {
         public final String id = UUID.randomUUID().toString();
         public final String name;
-        public final String detail;      // readable options, e.g. "30cm · Thin base · + Bacon"
-        public final double unitPrice;   // estimate only; the server recalculates
+        public String detail;      // readable options, e.g. "30cm · Thin base · + Bacon"
+        public double unitPrice;   // estimate only; the server recalculates
         public int quantity;
         public final Models.OrderItemRequest request;
+        public final Models.SpecialItemRequest specialRequest;
 
         public Line(String name, String detail, double unitPrice, int quantity, Models.OrderItemRequest request) {
             this.name = name; this.detail = detail; this.unitPrice = unitPrice;
-            this.quantity = quantity; this.request = request;
+            this.quantity = quantity; this.request = request; this.specialRequest = null;
+        }
+
+        public Line(String name, String detail, double unitPrice, int quantity, Models.SpecialItemRequest request) {
+            this.name = name; this.detail = detail; this.unitPrice = unitPrice;
+            this.quantity = quantity; this.request = null; this.specialRequest = request;
         }
     }
 
@@ -48,6 +54,8 @@ public final class Cart {
     public void remove(String id) { setQuantity(id, 0); }
 
     public void clear() { lines.clear(); notifyChanged(); }
+
+    public void pricesUpdated() { notifyChanged(); }
 
     public int count() {
         int n = 0;

@@ -19,19 +19,22 @@ public class MenuAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public interface Listener {
         void onPizza(int pizzaId);
         void onItem(int itemId);
+        void onSpecial(long specialId);
     }
 
     public static final class Row {
-        static final int HEADER = 0, PIZZA = 1, ITEM = 2;
+        static final int HEADER = 0, PIZZA = 1, ITEM = 2, SPECIAL = 3;
         final int type;
         String header;
         Models.PizzaCard pizza;
         Models.MenuItem item;
+        Models.Special special;
         private Row(int type) { this.type = type; }
 
         public static Row header(String text) { Row r = new Row(HEADER); r.header = text; return r; }
         public static Row pizza(Models.PizzaCard p) { Row r = new Row(PIZZA); r.pizza = p; return r; }
         public static Row item(Models.MenuItem m) { Row r = new Row(ITEM); r.item = m; return r; }
+        public static Row special(Models.Special s) { Row r = new Row(SPECIAL); r.special = s; return r; }
     }
 
     private final List<Row> rows = new ArrayList<>();
@@ -75,6 +78,16 @@ public class MenuAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Ui.show(h.from, true);
             h.price.setText(Money.rand(p.basePrice));
             h.itemView.setOnClickListener(v -> listener.onPizza(p.pizzaId));
+        } else if (row.type == Row.SPECIAL) {
+            Models.Special s = row.special;
+            h.name.setText(s.name);
+            h.sub.setText(s.description == null ? "" : s.description);
+            Ui.show(h.sub, s.description != null && !s.description.isEmpty());
+            h.tag.setText(s.availableToday ? "Today" : "This week");
+            Ui.show(h.tag, true);
+            Ui.show(h.from, false);
+            h.price.setText(Money.rand(s.price));
+            h.itemView.setOnClickListener(v -> listener.onSpecial(s.id));
         } else {
             final Models.MenuItem m = row.item;
             h.name.setText(m.name);

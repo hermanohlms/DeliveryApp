@@ -38,6 +38,14 @@ public interface Api {
     @GET("api/branches/{branchId}/menu-items")
     Call<List<Models.MenuItem>> menuItems(@Path("branchId") int branchId);
 
+    @GET("api/branches/{branchId}/specials/week")
+    Call<List<Models.Special>> specials(@Path("branchId") int branchId);
+
+    @POST("api/branches/{branchId}/specials/{specialId}/quote")
+    Call<Models.SpecialQuote> specialQuote(@Path("branchId") int branchId,
+                                          @Path("specialId") long specialId,
+                                          @Body Models.SpecialItemRequest body);
+
     @POST("api/orders")
     Call<Models.OrderResponse> placeOrder(@Header("Idempotency-Key") String key, @Body Models.OrderRequest body);
 

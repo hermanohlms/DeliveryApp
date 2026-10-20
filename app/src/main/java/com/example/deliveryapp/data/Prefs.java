@@ -9,6 +9,7 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /** Everything that survives app restarts: login token, chosen branch, saved details, order history. */
 public final class Prefs {
@@ -29,13 +30,27 @@ public final class Prefs {
     // ------------------------------------------------------------ session
     public void saveSession(Models.AuthResponse a, String fallbackUsername) {
         long expires = a.expiresIn > 0 ? System.currentTimeMillis() + a.expiresIn * 1000L : 0L;
-        sp.edit().putString("token", a.accessToken)
-                .putString("username", a.username != null ? a.username : fallbackUsername)
+        String username = a.username != null ? a.username : fallbackUsername;
+        String owner = sp.getString("profile_owner", null);
+        if (owner == null) {
+            Models.Profile old = readProfile();
+            owner = old.email;
+        }
+        SharedPreferences.Editor edit = sp.edit();
+        boolean sameAccount = owner != null && (owner.equalsIgnoreCase(username)
+                || fallbackUsername != null && owner.equalsIgnoreCase(fallbackUsername));
+        if (!sameAccount) {
+            edit.remove("profile").remove("profile_owner");
+        } else {
+            edit.putString("profile_owner", username.toLowerCase(Locale.ROOT));
+        }
+        edit.putString("token", a.accessToken).putString("username", username)
                 .putLong("expires", expires).apply();
     }
 
     public void clearSession() {
-        sp.edit().remove("token").remove("username").remove("expires").apply();
+        sp.edit().remove("token").remove("username").remove("expires")
+                .remove("profile").remove("profile_owner").apply();
     }
 
     /** null when logged out or the token has expired */
@@ -58,6 +73,19 @@ public final class Prefs {
 
     // ------------------------------------------------------------ saved details (local copy of the profile)
     public Models.Profile getProfile() {
+        String owner = sp.getString("profile_owner", null);
+        if (owner == null && isLoggedIn()) {
+            Models.Profile legacy = readProfile();
+            if (legacy.email != null && legacy.email.equalsIgnoreCase(getUsername())) {
+                owner = getUsername();
+                sp.edit().putString("profile_owner", owner.toLowerCase(Locale.ROOT)).apply();
+            }
+        }
+        if (owner == null || !owner.equalsIgnoreCase(getUsername()) || !isLoggedIn()) return new Models.Profile();
+        return readProfile();
+    }
+
+    private Models.Profile readProfile() {
         String json = sp.getString("profile", null);
         if (json != null) {
             try {
@@ -72,7 +100,10 @@ public final class Prefs {
         Models.Profile copy = gson.fromJson(gson.toJson(p), Models.Profile.class);
         copy.currentPassword = null;   // never store passwords
         copy.newPassword = null;
-        sp.edit().putString("profile", gson.toJson(copy)).apply();
+        String owner = isLoggedIn() ? getUsername() : copy.email;
+        if (owner == null || owner.trim().isEmpty()) return;
+        sp.edit().putString("profile", gson.toJson(copy))
+                .putString("profile_owner", owner.toLowerCase(Locale.ROOT)).apply();
     }
 
     // ------------------------------------------------------------ order history (local fallback)

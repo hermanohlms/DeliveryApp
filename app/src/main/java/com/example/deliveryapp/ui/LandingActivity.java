@@ -12,50 +12,62 @@ import com.example.deliveryapp.data.Branch;
 import com.example.deliveryapp.data.Models;
 import com.example.deliveryapp.data.Prefs;
 import com.example.deliveryapp.data.Repo;
-import com.google.android.material.card.MaterialCardView;
 
 /** Native Pete’s Pizza landing screen with branch and session-aware actions. */
 public class LandingActivity extends BaseActivity {
+    private boolean branchChoiceOpen;
     @Override protected boolean requiresLogin() { return false; }
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
         setContentView(R.layout.activity_landing);
-        MaterialCardView kenridge = findViewById(R.id.cardKenridge);
-        MaterialCardView uitzicht = findViewById(R.id.cardUitzicht);
-        kenridge.setOnClickListener(v -> selectBranch(Branch.KENRIDGE, kenridge, uitzicht));
-        uitzicht.setOnClickListener(v -> selectBranch(Branch.UITZICHT, kenridge, uitzicht));
+        branchChoiceOpen = state != null && state.getBoolean("branch_choice_open");
+        findViewById(R.id.btnViewMenu).setOnClickListener(v -> {
+            branchChoiceOpen = true;
+            findViewById(R.id.branchChoice).setVisibility(View.VISIBLE);
+        });
+        findViewById(R.id.btnKenridge).setOnClickListener(v -> selectBranch(Branch.KENRIDGE));
+        findViewById(R.id.btnUitzicht).setOnClickListener(v -> selectBranch(Branch.UITZICHT));
         findViewById(R.id.btnKenridgeMap).setOnClickListener(v -> openMap("Petes Pizza Kenridge"));
         findViewById(R.id.btnUitzichtMap).setOnClickListener(v -> openMap("Petes Pizza Uitzicht"));
         findViewById(R.id.btnLogin).setOnClickListener(v -> startActivity(new Intent(this, LoginActivity.class)));
         findViewById(R.id.btnRegister).setOnClickListener(v -> startActivity(new Intent(this, RegisterActivity.class)));
         findViewById(R.id.btnOrder).setOnClickListener(v -> openOrdering());
-        findViewById(R.id.btnLogout).setOnClickListener(v -> { Repo.get().logout(); updateAccountActions(); });
+        findViewById(R.id.btnLogout).setOnClickListener(v -> {
+            Repo.get().logout();
+            branchChoiceOpen = false;
+            updateAccountActions();
+        });
         updateAccountActions();
-        updateBranchSelection(kenridge, uitzicht);
     }
 
-    private void selectBranch(Branch branch, MaterialCardView kenridge, MaterialCardView uitzicht) {
+    @Override protected void onResume() {
+        super.onResume();
+        updateAccountActions();
+    }
+
+    @Override protected void onSaveInstanceState(Bundle out) {
+        out.putBoolean("branch_choice_open", branchChoiceOpen);
+        super.onSaveInstanceState(out);
+    }
+
+    private void selectBranch(Branch branch) {
         Prefs.get().setBranch(branch);
-        updateBranchSelection(kenridge, uitzicht);
-    }
-
-    private void updateBranchSelection(MaterialCardView kenridge, MaterialCardView uitzicht) {
-        boolean selected = Prefs.get().getBranch() == Branch.KENRIDGE;
-        kenridge.setStrokeWidth(Ui.dp(this, selected ? 2 : 1));
-        uitzicht.setStrokeWidth(Ui.dp(this, selected ? 1 : 2));
-        kenridge.setStrokeColor(getColor(selected ? R.color.terracotta : R.color.outline));
-        uitzicht.setStrokeColor(getColor(selected ? R.color.outline : R.color.terracotta));
+        openOrdering();
     }
 
     private void updateAccountActions() {
         boolean signedIn = Prefs.get().isLoggedIn();
         findViewById(R.id.guestActions).setVisibility(signedIn ? View.GONE : View.VISIBLE);
         findViewById(R.id.memberActions).setVisibility(signedIn ? View.VISIBLE : View.GONE);
-        Models.Profile profile = Prefs.get().getProfile();
-        String name = profile.firstName == null || profile.firstName.trim().isEmpty()
-                ? Prefs.get().getUsername() : profile.firstName.trim();
-        ((TextView) findViewById(R.id.tvWelcome)).setText("Welcome back, " + name);
+        findViewById(R.id.branchChoice).setVisibility(signedIn || branchChoiceOpen ? View.VISIBLE : View.GONE);
+        TextView welcome = findViewById(R.id.tvWelcome);
+        welcome.setVisibility(signedIn ? View.VISIBLE : View.GONE);
+        if (signedIn) {
+            Models.Profile profile = Prefs.get().getProfile();
+            String name = profile.firstName == null ? "" : profile.firstName.trim();
+            welcome.setText(name.isEmpty() ? "Welcome back!" : "Welcome back, " + name + "!");
+        }
     }
 
     private void openMap(String query) {

@@ -3,6 +3,7 @@ package com.example.deliveryapp.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
@@ -25,9 +26,12 @@ public class MainActivity extends BaseActivity {
     private BottomNavigationView bottomNav;
     private final Runnable cartListener = this::updateBadge;
 
+    @Override protected boolean requiresLogin() { return false; }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        // A restored protected tab must not be created before a guest session is configured.
+        super.onCreate(Prefs.get().isLoggedIn() ? savedInstanceState : null);
         setContentView(R.layout.activity_main);
 
         tvBranch = findViewById(R.id.tvBranch);
@@ -37,17 +41,37 @@ public class MainActivity extends BaseActivity {
 
         findViewById(R.id.branchSelector).setOnClickListener(v -> showBranchMenu());
         findViewById(R.id.cartButton).setOnClickListener(v -> startActivity(new Intent(this, CartActivity.class)));
+        findViewById(R.id.btnGuestLogin).setOnClickListener(v -> startActivity(new Intent(this, LoginActivity.class)));
 
-        FragmentManager fm = getSupportFragmentManager();
-        if (fm.findFragmentByTag(TAG_MENU) == null) {
-            fm.beginTransaction()
-                    .add(R.id.fragmentContainer, new MenuFragment(), TAG_MENU)
-                    .add(R.id.fragmentContainer, new OrdersFragment(), TAG_ORDERS)
-                    .add(R.id.fragmentContainer, new ProfileFragment(), TAG_PROFILE)
-                    .commitNow();
-        }
+        configureSession();
         selectTab(bottomNav.getSelectedItemId());
-        bottomNav.setOnItemSelectedListener(item -> { selectTab(item.getItemId()); return true; });
+        bottomNav.setOnItemSelectedListener(item -> {
+            if (!Prefs.get().isLoggedIn() && item.getItemId() != R.id.nav_menu) return false;
+            selectTab(item.getItemId());
+            return true;
+        });
+    }
+
+    private void configureSession() {
+        boolean signedIn = Prefs.get().isLoggedIn();
+        ((TextView) findViewById(R.id.tvBranchLabel)).setText(signedIn ? "Ordering from" : "Browsing menu from");
+        findViewById(R.id.cartButton).setVisibility(signedIn ? View.VISIBLE : View.GONE);
+        findViewById(R.id.btnGuestLogin).setVisibility(signedIn ? View.GONE : View.VISIBLE);
+        bottomNav.setVisibility(signedIn ? View.VISIBLE : View.GONE);
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction tx = fm.beginTransaction();
+        if (fm.findFragmentByTag(TAG_MENU) == null) tx.add(R.id.fragmentContainer, new MenuFragment(), TAG_MENU);
+        Fragment orders = fm.findFragmentByTag(TAG_ORDERS);
+        Fragment profile = fm.findFragmentByTag(TAG_PROFILE);
+        if (signedIn) {
+            if (orders == null) tx.add(R.id.fragmentContainer, new OrdersFragment(), TAG_ORDERS);
+            if (profile == null) tx.add(R.id.fragmentContainer, new ProfileFragment(), TAG_PROFILE);
+        } else {
+            if (orders != null) tx.remove(orders);
+            if (profile != null) tx.remove(profile);
+        }
+        tx.commitNow();
+        if (!signedIn) bottomNav.setSelectedItemId(R.id.nav_menu);
     }
 
     private void selectTab(int itemId) {
@@ -55,7 +79,8 @@ public class MainActivity extends BaseActivity {
         Fragment menu = fm.findFragmentByTag(TAG_MENU);
         Fragment orders = fm.findFragmentByTag(TAG_ORDERS);
         Fragment profile = fm.findFragmentByTag(TAG_PROFILE);
-        Fragment target = itemId == R.id.nav_orders ? orders : itemId == R.id.nav_profile ? profile : menu;
+        Fragment target = !Prefs.get().isLoggedIn() ? menu
+                : itemId == R.id.nav_orders ? orders : itemId == R.id.nav_profile ? profile : menu;
         FragmentTransaction tx = fm.beginTransaction();
         for (Fragment f : new Fragment[]{menu, orders, profile}) {
             if (f == null) continue;
@@ -104,6 +129,8 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        configureSession();
+        selectTab(bottomNav.getSelectedItemId());
         Cart.get().addListener(cartListener);
         updateBadge();
     }

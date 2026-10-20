@@ -158,13 +158,14 @@ public class RegisterActivity extends BaseActivity {
         Repo.get().register(req, new Repo.Result<Models.AuthResponse>() {
             @Override public void onSuccess(Models.AuthResponse auth) {
                 if (dead()) return;
-                rememberProfile(req);
                 Prefs.get().setBranch(Branch.fromName(req.preferredStore));
                 if (auth != null && auth.accessToken != null) {
                     Prefs.get().saveSession(auth, email);
+                    rememberProfile(req);
                     openLanding();
                 } else {
                     // The server created the account but sent no token: sign in with the same details.
+                    rememberProfile(req);
                     Repo.get().login(email, password, new Repo.Result<Models.AuthResponse>() {
                         @Override public void onSuccess(Models.AuthResponse a2) {
                             if (dead()) return;

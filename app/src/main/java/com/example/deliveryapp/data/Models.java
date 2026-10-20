@@ -146,6 +146,7 @@ public final class Models {
     public static class ToppingItem {
         public int toppingId;
         public String name;
+        public Boolean removable;
     }
 
     public static class ToppingPrice {
@@ -178,6 +179,88 @@ public final class Models {
 
     public static class QuoteResponse {
         public double total;
+    }
+
+    public static class Special {
+        public long id;
+        public String name;
+        public String description;
+        public double price;
+        public boolean availableToday;
+        public List<SpecialComponent> components;
+        public List<SpecialAddon> addons;
+    }
+
+    public static class SpecialComponent {
+        public long id;
+        public String label;
+        public String productType;
+        public int quantity;
+        public String selectionMode;
+        public Integer sizeCm;
+        public boolean allowRepeats;
+        public boolean allowCustomization;
+        public List<SpecialOption> options;
+    }
+
+    public static class SpecialOption {
+        public int id;
+        public String name;
+    }
+
+    public static class SpecialAddon {
+        public long id;
+        public String label;
+        public String productType;
+        public int productId;
+        public String productName;
+        public Integer sizeCm;
+        public double price;
+        public int maxQuantity;
+        public boolean allowCustomization;
+        public boolean active;
+    }
+
+    public static class SpecialSelection {
+        public long componentId;
+        public int selectionIndex;
+        public OrderItemRequest item;
+        public SpecialSelection(long componentId, int selectionIndex, OrderItemRequest item) {
+            this.componentId = componentId;
+            this.selectionIndex = selectionIndex;
+            this.item = item;
+        }
+    }
+
+    public static class SpecialAddonSelection {
+        public long addonId;
+        public int quantity;
+        public OrderItemRequest item;
+        public SpecialAddonSelection(long addonId, int quantity, OrderItemRequest item) {
+            this.addonId = addonId;
+            this.quantity = quantity;
+            this.item = item;
+        }
+    }
+
+    public static class SpecialItemRequest {
+        public long specialId;
+        public int quantity = 1;
+        public List<SpecialSelection> selections = new ArrayList<>();
+        public List<SpecialAddonSelection> addons = new ArrayList<>();
+
+        public SpecialItemRequest copyWithQuantity(int value) {
+            SpecialItemRequest copy = new SpecialItemRequest();
+            copy.specialId = specialId;
+            copy.quantity = value;
+            copy.selections = selections;
+            copy.addons = addons;
+            return copy;
+        }
+    }
+
+    public static class SpecialQuote {
+        public double lineTotal;
     }
 
     // ------------------------------------------------------------ orders
@@ -245,6 +328,7 @@ public final class Models {
         public String gateAccessCode;
         public AddressSelection deliveryAddress;
         public List<OrderItemRequest> items;
+        public List<SpecialItemRequest> specialItems;
         /** "payfast" (paid in the app before the kitchen sees it) or "cash" (paid on delivery / at the counter) */
         public String paymentMethod;
     }

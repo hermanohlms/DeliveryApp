@@ -19,8 +19,12 @@ import com.example.deliveryapp.R;
 import com.example.deliveryapp.data.Models;
 import com.example.deliveryapp.data.Prefs;
 import com.example.deliveryapp.data.Repo;
+import com.example.deliveryapp.util.Money;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import androidx.appcompat.app.AlertDialog;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -31,7 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class MenuFragment extends Fragment {
-    private static final String ALL = "All", PIZZAS = "Pizzas";
+    private static final String ALL = "All", PIZZAS = "Pizzas", SPECIALS = "Specials";
 
     private MenuAdapter adapter;
     private ChipGroup chips;
@@ -40,13 +44,16 @@ public class MenuFragment extends Fragment {
 
     private Models.PizzaCategorySplit pizzas = new Models.PizzaCategorySplit();
     private List<Models.MenuItem> items = new ArrayList<>();
+    private List<Models.Special> specials = new ArrayList<>();
     private String selected = ALL;
     private String query = "";
     private int generation;
     private int done;
     private Models.PizzaCategorySplit pizzaResult;
     private List<Models.MenuItem> menuResult;
-    private String pizzaError, menuError;
+    private List<Models.Special> specialResult;
+    private String pizzaError, menuError, specialError;
+    private final Map<Integer, Models.PizzaDetail> guestPizzaDetails = new LinkedHashMap<>();
 
     @Nullable
     @Override
@@ -61,16 +68,25 @@ public class MenuFragment extends Fragment {
         errorGroup = view.findViewById(R.id.errorGroup);
         tvEmpty = view.findViewById(R.id.tvEmpty);
         tvError = view.findViewById(R.id.tvError);
+        Ui.show(view.findViewById(R.id.tvGuestNotice), !Prefs.get().isLoggedIn());
 
         adapter = new MenuAdapter(new MenuAdapter.Listener() {
             @Override public void onPizza(int pizzaId) {
+                if (!Prefs.get().isLoggedIn()) { showGuestPizza(pizzaId); return; }
                 Intent i = new Intent(requireContext(), PizzaDetailActivity.class);
                 i.putExtra(PizzaDetailActivity.EXTRA_ID, pizzaId);
                 startActivity(i);
             }
             @Override public void onItem(int itemId) {
+                if (!Prefs.get().isLoggedIn()) { showGuestOrderPrompt(); return; }
                 Intent i = new Intent(requireContext(), ItemDetailActivity.class);
                 i.putExtra(ItemDetailActivity.EXTRA_ID, itemId);
+                startActivity(i);
+            }
+            @Override public void onSpecial(long specialId) {
+                if (!Prefs.get().isLoggedIn()) { showGuestOrderPrompt(); return; }
+                Intent i = new Intent(requireContext(), SpecialDetailActivity.class);
+                i.putExtra(SpecialDetailActivity.EXTRA_ID, specialId);
                 startActivity(i);
             }
         });
@@ -90,7 +106,50 @@ public class MenuFragment extends Fragment {
 
     /** Called by MainActivity after the customer switches branch. */
     public void reload() {
+        guestPizzaDetails.clear();
         if (getView() != null) load(true);
+    }
+
+    private void showGuestOrderPrompt() {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Ready to order?")
+                .setMessage("Log in to customize items and add them to your cart.")
+                .setPositiveButton("Log in", (d, w) -> startActivity(new Intent(requireContext(), LoginActivity.class)))
+                .setNegativeButton("Keep browsing", null)
+                .show();
+    }
+
+    private void showGuestPizza(int pizzaId) {
+        Models.PizzaDetail cached = guestPizzaDetails.get(pizzaId);
+        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Pizza sizes and prices")
+                .setMessage(cached == null ? "Loading sizes…" : sizePrices(cached))
+                .setPositiveButton("Log in to order", (d, w) -> startActivity(new Intent(requireContext(), LoginActivity.class)))
+                .setNegativeButton("Keep browsing", null)
+                .show();
+        if (cached != null) return;
+        final int branchId = Prefs.get().getBranch().id;
+        Repo.get().pizzaDetail(branchId, pizzaId, null, new Repo.Result<Models.PizzaDetail>() {
+            @Override public void onSuccess(Models.PizzaDetail detail) {
+                if (!isAdded() || getView() == null || branchId != Prefs.get().getBranch().id) return;
+                if (detail != null) guestPizzaDetails.put(pizzaId, detail);
+                if (dialog.isShowing()) dialog.setMessage(detail == null ? "Sizes are unavailable right now." : sizePrices(detail));
+            }
+            @Override public void onError(String message, int code) {
+                if (dialog.isShowing() && isAdded()) dialog.setMessage("Sizes are unavailable right now. Please try again later.");
+            }
+        });
+    }
+
+    private String sizePrices(Models.PizzaDetail detail) {
+        List<Models.SizePrice> sizes = Models.nz(detail.availableSizes);
+        if (sizes.isEmpty()) return "Sizes are unavailable right now.";
+        StringBuilder text = new StringBuilder();
+        for (Models.SizePrice size : sizes) {
+            if (text.length() > 0) text.append("\n");
+            text.append(size.sizeCm).append(" cm · ").append(Money.rand(size.basePrice));
+        }
+        return text.toString();
     }
 
     // ------------------------------------------------------------------ loading
@@ -100,7 +159,8 @@ public class MenuFragment extends Fragment {
         Ui.show(progress, true);
         Ui.show(errorGroup, false);
         Ui.show(tvEmpty, false);
-        done = 0; pizzaResult = null; menuResult = null; pizzaError = null; menuError = null;
+        done = 0; pizzaResult = null; menuResult = null; specialResult = null;
+        pizzaError = null; menuError = null; specialError = null;
 
         Repo.get().pizzas(branchId, new Repo.Result<Models.PizzaCategorySplit>() {
             @Override public void onSuccess(Models.PizzaCategorySplit v) {
@@ -126,15 +186,27 @@ public class MenuFragment extends Fragment {
                 oneDone(gen);
             }
         });
+        Repo.get().specials(branchId, new Repo.Result<List<Models.Special>>() {
+            @Override public void onSuccess(List<Models.Special> value) {
+                if (stale(gen)) return;
+                specialResult = value;
+                oneDone(gen);
+            }
+            @Override public void onError(String message, int code) {
+                if (stale(gen)) return;
+                specialError = message;
+                oneDone(gen);
+            }
+        });
     }
 
     private boolean stale(int gen) { return gen != generation || !isAdded() || getView() == null; }
 
     private void oneDone(int gen) {
-        if (++done < 2) return;
+        if (++done < 3) return;
         Ui.show(progress, false);
-        if (pizzaResult == null && menuResult == null) {
-            tvError.setText(pizzaError != null ? pizzaError : menuError);
+        if (pizzaResult == null && menuResult == null && specialResult == null) {
+            tvError.setText(pizzaError != null ? pizzaError : menuError != null ? menuError : specialError);
             Ui.show(errorGroup, true);
             adapter.submit(new ArrayList<MenuAdapter.Row>());
             return;
@@ -142,6 +214,7 @@ public class MenuFragment extends Fragment {
         // Show whatever loaded; one missing section is not fatal.
         pizzas = pizzaResult != null ? pizzaResult : new Models.PizzaCategorySplit();
         items = menuResult != null ? menuResult : new ArrayList<Models.MenuItem>();
+        specials = specialResult != null ? specialResult : new ArrayList<Models.Special>();
         buildChips();
         render();
     }
@@ -151,6 +224,7 @@ public class MenuFragment extends Fragment {
         List<String> names = new ArrayList<>();
         names.add(ALL);
         if (!Models.nz(pizzas.favouritePizzas).isEmpty() || !Models.nz(pizzas.supremePizzas).isEmpty()) names.add(PIZZAS);
+        if (!specials.isEmpty()) names.add(SPECIALS);
         Set<String> cats = new LinkedHashSet<>();
         for (Models.MenuItem m : items) if (m.categoryName != null) cats.add(m.categoryName);
         names.addAll(cats);
@@ -180,7 +254,17 @@ public class MenuFragment extends Fragment {
             addPizzas(rows, "Favourite pizzas", Models.nz(pizzas.favouritePizzas));
             addPizzas(rows, "Supreme pizzas", Models.nz(pizzas.supremePizzas));
         }
-        if (!selected.equals(PIZZAS)) {
+        if (selected.equals(ALL) || selected.equals(SPECIALS)) {
+            List<Models.Special> matches = new ArrayList<>();
+            for (Models.Special special : specials) {
+                if (has(special.name, query) || has(special.description, query)) matches.add(special);
+            }
+            if (!matches.isEmpty()) {
+                rows.add(MenuAdapter.Row.header("Specials"));
+                for (Models.Special special : matches) rows.add(MenuAdapter.Row.special(special));
+            }
+        }
+        if (!selected.equals(PIZZAS) && !selected.equals(SPECIALS)) {
             Map<String, List<Models.MenuItem>> grouped = new LinkedHashMap<>();
             for (Models.MenuItem m : items) {
                 boolean inCategory = selected.equals(ALL) || selected.equals(m.categoryName);

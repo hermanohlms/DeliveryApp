@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +29,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 /** All network access. Callbacks are delivered on the main thread (Retrofit's Android default). */
-public final class Repo {
+public final class Repo implements CatalogClient {
     public interface Result<T> {
         void onSuccess(T value);
         void onError(String message, int code);   // code 0 = no connection
@@ -105,7 +106,7 @@ public final class Repo {
         int code = r.code();
         String path = r.raw().request().url().encodedPath();
         boolean authCall = path.startsWith("/api/auth/");
-        if (code == 401 && !authCall) {
+        if (code == 401 && !authCall && !Prefs.get().getUsername().isEmpty()) {
             Prefs.get().clearSession();
             Cart.get().clear();
             App.goToLogin();
@@ -258,6 +259,66 @@ public final class Repo {
                 }
                 cb.onError(message, code);
             }
+        });
+    }
+
+    public void specials(int branchId, Result<List<Models.Special>> cb) {
+        final String key = "specials:" + branchId;
+        run(api.specials(branchId), "specials", new Result<List<Models.Special>>() {
+            @Override public void onSuccess(List<Models.Special> value) {
+                List<Models.Special> list = Models.nz(value);
+                catalogDb.putJson(key, gson.toJson(list));
+                cb.onSuccess(list);
+            }
+            @Override public void onError(String message, int code) {
+                String cached = catalogDb.getJson(key);
+                if (cached != null) {
+                    try {
+                        cb.onSuccess(gson.fromJson(cached, new TypeToken<List<Models.Special>>() {}.getType()));
+                        return;
+                    } catch (RuntimeException ignored) { }
+                }
+                cb.onError(message, code);
+            }
+        });
+    }
+
+    public void specialQuote(int branchId, Models.SpecialItemRequest request, Result<Models.SpecialQuote> cb) {
+        run(api.specialQuote(branchId, request.specialId, request), "special quote", cb);
+    }
+
+    /** Checkout calls these without an offline fallback, then replaces stale cache entries. */
+    public void freshMenu(int branchId, Result<List<Models.MenuItem>> cb) {
+        run(api.menuItems(branchId), "menu", new Result<List<Models.MenuItem>>() {
+            @Override public void onSuccess(List<Models.MenuItem> value) {
+                List<Models.MenuItem> list = Models.nz(value);
+                menuCache.put(branchId, list);
+                catalogDb.saveMenu(branchId, list, gson);
+                cb.onSuccess(list);
+            }
+            @Override public void onError(String message, int code) { cb.onError(message, code); }
+        });
+    }
+
+    public void freshPizzaDetail(int branchId, int pizzaId, Integer sizeCm, Result<Models.PizzaDetail> cb) {
+        run(api.pizzaDetail(branchId, pizzaId, sizeCm), "pizza", new Result<Models.PizzaDetail>() {
+            @Override public void onSuccess(Models.PizzaDetail value) {
+                if (value != null) catalogDb.putJson("pizza:" + branchId + ":" + pizzaId + ":" + sizeCm,
+                        gson.toJson(value));
+                cb.onSuccess(value);
+            }
+            @Override public void onError(String message, int code) { cb.onError(message, code); }
+        });
+    }
+
+    public void freshSpecials(int branchId, Result<List<Models.Special>> cb) {
+        run(api.specials(branchId), "specials", new Result<List<Models.Special>>() {
+            @Override public void onSuccess(List<Models.Special> value) {
+                List<Models.Special> list = Models.nz(value);
+                catalogDb.putJson("specials:" + branchId, gson.toJson(list));
+                cb.onSuccess(list);
+            }
+            @Override public void onError(String message, int code) { cb.onError(message, code); }
         });
     }
 
