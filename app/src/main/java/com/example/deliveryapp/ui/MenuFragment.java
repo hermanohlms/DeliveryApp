@@ -71,6 +71,12 @@ public class MenuFragment extends Fragment {
         tvEmpty = view.findViewById(R.id.tvEmpty);
         tvError = view.findViewById(R.id.tvError);
         Ui.show(view.findViewById(R.id.tvGuestNotice), !Prefs.get().isLoggedIn());
+        view.findViewById(R.id.btnBackHome).setOnClickListener(v -> {
+            Intent home = new Intent(requireContext(), LandingActivity.class);
+            home.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(home);
+            requireActivity().finish();
+        });
 
         adapter = new MenuAdapter(new MenuAdapter.Listener() {
             @Override public void onPizza(int pizzaId) {

@@ -7,6 +7,13 @@
         android:paddingTop="10dp" android:paddingBottom="10dp"
         android:text="Browsing as a guest · Log in to customize and order"
         android:textColor="@color/gunmetal" android:visibility="gone" />
+    <com.google.android.material.button.MaterialButton
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:id="@+id/btnBackHome" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:minHeight="56dp"
+        android:layout_marginStart="16dp" android:layout_marginEnd="16dp"
+        android:layout_marginTop="12dp" android:text="Back to home"
+        android:textStyle="bold" />
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp" android:layout_marginTop="20dp" android:text="What are you craving?"
         android:textAppearance="@style/Text.Page"/>
