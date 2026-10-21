@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.DeliveryApp" parent="Theme.Material3.Light.NoActionBar">
+        <item name="materialButtonStyle">@style/Widget.App.PrimaryButton</item>
         <item name="colorPrimary">@color/terracotta</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorPrimaryContainer">@color/terracotta_soft</item>
@@ -22,6 +23,13 @@
         <item name="android:windowLightStatusBar">false</item>
     </style>
 
+    <style name="Widget.App.PrimaryButton" parent="Widget.Material3.Button">
+        <item name="cornerRadius">12dp</item><item name="android:textSize">15sp</item>
+        <item name="android:minHeight">56dp</item><item name="android:textStyle">bold</item>
+    </style>
+    <style name="Text.Page" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textColor">?attr/colorOnSurface</item><item name="android:textStyle">bold</item>
+    </style>
     <style name="Widget.App.Chip" parent="Widget.Material3.Chip.Filter">
         <item name="chipBackgroundColor">@color/chip_bg</item>
         <item name="android:textColor">@color/chip_text</item>

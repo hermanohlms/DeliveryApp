@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.DeliveryApp" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="materialButtonStyle">@style/Widget.App.PrimaryButton</item>
         <item name="colorPrimary">@color/terracotta</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorPrimaryContainer">#5B2018</item>

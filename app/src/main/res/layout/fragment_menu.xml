@@ -7,11 +7,15 @@
         android:paddingTop="10dp" android:paddingBottom="10dp"
         android:text="Browsing as a guest · Log in to customize and order"
         android:textColor="@color/gunmetal" android:visibility="gone" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp" android:layout_marginTop="20dp" android:text="What are you craving?"
+        android:textAppearance="@style/Text.Page"/>
     <com.google.android.material.textfield.TextInputLayout
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_marginStart="16dp" android:layout_marginEnd="16dp" android:layout_marginTop="12dp"
-        android:hint="Search the menu">
+        android:hint="Search your favourites" app:endIconMode="clear_text" app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp" app:boxCornerRadiusBottomStart="12dp" app:boxCornerRadiusBottomEnd="12dp">
         <com.google.android.material.textfield.TextInputEditText android:id="@+id/etSearch"
             android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" android:maxLines="1" />
     </com.google.android.material.textfield.TextInputLayout>

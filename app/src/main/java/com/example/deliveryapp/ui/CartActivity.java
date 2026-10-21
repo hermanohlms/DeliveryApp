@@ -25,10 +25,14 @@ public class CartActivity extends BaseActivity {
         setContentView(R.layout.activity_cart);
         setupToolbar("Your cart · " + Prefs.get().getBranch().displayName);
 
+        findViewById(R.id.btnBrowse).setOnClickListener(v -> {
+            Intent menu = new Intent(this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(menu); finish();
+        });
         footer = findViewById(R.id.footer);
         tvEmpty = findViewById(R.id.tvEmpty);
         tvTotal = findViewById(R.id.tvTotal);
-        adapter = new CartAdapter();
+        adapter = new CartAdapter(line -> CartEditor.open(this, line));
         RecyclerView rv = findViewById(R.id.rvCart);
         rv.setLayoutManager(new LinearLayoutManager(this));
         rv.setAdapter(adapter);
@@ -54,5 +58,6 @@ public class CartActivity extends BaseActivity {
         Ui.show(tvEmpty, empty);
         Ui.show(footer, !empty);
         tvTotal.setText(Money.rand(Cart.get().total()));
+        ((TextView)findViewById(R.id.tvCartCount)).setText(Cart.get().count() + (Cart.get().count() == 1 ? " item" : " items") + " · Made your way");
     }
 }

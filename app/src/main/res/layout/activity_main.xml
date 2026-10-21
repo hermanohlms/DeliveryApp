@@ -8,7 +8,7 @@
         <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
             android:gravity="center_vertical" android:orientation="horizontal">
             <LinearLayout android:id="@+id/branchSelector" android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:background="?attr/selectableItemBackground" android:clickable="true"
+                android:layout_weight="1" android:minHeight="48dp" android:gravity="center_vertical" android:background="?attr/selectableItemBackground" android:clickable="true"
                 android:focusable="true" android:orientation="vertical">
                 <TextView android:id="@+id/tvBranchLabel" android:layout_width="wrap_content" android:layout_height="wrap_content"
                     android:text="Ordering from" android:textColor="#B3FFFFFF" android:textSize="11sp" />
@@ -40,6 +40,13 @@
     </com.google.android.material.appbar.MaterialToolbar>
     <FrameLayout android:id="@+id/fragmentContainer" android:layout_width="match_parent" android:layout_height="0dp"
         android:layout_weight="1" />
+    <LinearLayout android:id="@+id/cartBar" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:background="?attr/colorSurface" android:paddingStart="16dp" android:paddingEnd="16dp"
+        android:paddingTop="8dp" android:paddingBottom="8dp" android:visibility="gone">
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnViewCart"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp"
+            android:text="View cart" android:accessibilityLiveRegion="polite"/>
+    </LinearLayout>
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav" android:layout_width="match_parent" android:layout_height="wrap_content"
         app:menu="@menu/bottom_nav" app:itemIconTint="@color/nav_item" app:itemTextColor="@color/nav_item"

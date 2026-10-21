@@ -46,6 +46,26 @@ public final class PizzaCustomization {
                 .noneMatch(option -> option.pizzaBaseOptionId == baseOptionId)) baseOptionId = null;
     }
 
+    /** Restore saved choices against the current size's catalog; report removed choices. */
+    public boolean restore(Models.OrderItemRequest request) {
+        boolean changed = false;
+        selected.clear(); selected.addAll(defaults);
+        baseOptionId = request.pizzaBaseOptionId;
+        if (baseOptionId != null && Models.nz(detail.baseOptions).stream()
+                .noneMatch(o -> o.pizzaBaseOptionId == baseOptionId)) { baseOptionId = null; changed = true; }
+        for (Models.Customization c : Models.nz(request.customizations)) {
+            if (c.quantity != 1) { changed = true; continue; }
+            if ("removedPizzaIngredient".equalsIgnoreCase(c.type)) {
+                Models.ToppingItem t = Models.nz(detail.defaultToppings).stream().filter(v -> v.toppingId == c.id).findFirst().orElse(null);
+                if (t != null && Boolean.TRUE.equals(t.removable)) selected.remove(c.id); else changed = true;
+            } else if (c.type == null || c.type.isEmpty()) {
+                boolean allowed = Models.nz(detail.allToppings).stream().anyMatch(t -> t.toppingId == c.id);
+                if (allowed && !defaults.contains(c.id)) selected.add(c.id); else changed = true;
+            } else changed = true;
+        }
+        return changed;
+    }
+
     public boolean toggle(Models.ToppingItem item) {
         if (defaults.contains(item.toppingId) && selected.contains(item.toppingId)
                 && !Boolean.TRUE.equals(item.removable)) return false;

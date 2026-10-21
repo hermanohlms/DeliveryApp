@@ -12,29 +12,22 @@
                 android:layout_height="wrap_content" android:layout_gravity="center_horizontal" />
             <TextView android:id="@+id/tvError" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:visibility="gone" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnRetry" style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Try again" android:visibility="gone"/>
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Build your bundle"
+                android:textAppearance="@style/Text.Page" android:layout_marginBottom="8dp"/>
+            <TextView android:id="@+id/tvBasePrice" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textSize="20sp" android:textStyle="bold" android:textColor="@color/terracotta" android:layout_marginBottom="8dp"/>
+            <TextView android:id="@+id/tvNotice" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:background="@color/steel_blue_soft" android:padding="12dp" android:visibility="gone"
+                android:accessibilityLiveRegion="polite" android:textColor="@color/gunmetal"/>
             <TextView android:id="@+id/tvDescription" android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
             <LinearLayout android:id="@+id/slots" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:orientation="vertical" />
             <LinearLayout android:id="@+id/addons" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:orientation="vertical" />
-            <TextView android:id="@+id/tvQuantity" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_marginTop="16dp"
-                android:textAppearance="@style/Text.Section" />
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnMinus"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="−"
-                    android:contentDescription="Decrease quantity" />
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnPlus"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="+"
-                    android:contentDescription="Increase quantity" />
-            </LinearLayout>
-            <TextView android:id="@+id/tvHint" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_marginTop="8dp" />
         </LinearLayout>
     </ScrollView>
-    <com.google.android.material.button.MaterialButton android:id="@+id/btnAdd"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_margin="16dp" android:text="Add special to cart" />
+    <include layout="@layout/view_add_bar" />
 </LinearLayout>

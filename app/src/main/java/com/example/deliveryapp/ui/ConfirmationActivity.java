@@ -11,6 +11,7 @@ public class ConfirmationActivity extends BaseActivity {
     public static final String EXTRA_TYPE = "orderType";
     public static final String EXTRA_BRANCH = "branch";
     /** PAYMENT_PAID, PAYMENT_PENDING, or absent for cash orders */
+    public static final String EXTRA_STATUS = "orderStatus";
     public static final String EXTRA_PAYMENT = "payment";
     public static final String PAYMENT_PAID = "paid";
     public static final String PAYMENT_PENDING = "pending";
@@ -19,6 +20,9 @@ public class ConfirmationActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_confirmation);
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() { backToMenu(); }
+        });
 
         long id = getIntent().getLongExtra(EXTRA_ORDER_ID, 0);
         String type = getIntent().getStringExtra(EXTRA_TYPE);
@@ -26,6 +30,10 @@ public class ConfirmationActivity extends BaseActivity {
         String payment = getIntent().getStringExtra(EXTRA_PAYMENT);
 
         ((TextView) findViewById(R.id.tvOrderId)).setText("Order #" + id);
+        ((TextView) findViewById(R.id.tvOrderMeta)).setText((branch == null ? "Restaurant" : branch) + " · " + ("pickup".equals(type) ? "Pickup" : "Delivery"));
+        String status = getIntent().getStringExtra(EXTRA_STATUS);
+        ((TextView) findViewById(R.id.tvOrderStatus)).setText(PAYMENT_PENDING.equals(payment) ? "Awaiting payment confirmation" : status == null ? "Order received" : status.replace('_', ' '));
+        if (PAYMENT_PENDING.equals(payment)) ((TextView)findViewById(R.id.tvHeading)).setText("Your order is almost there");
         String info = (branch == null ? "The branch" : branch) + " has received your "
                 + ("pickup".equals(type) ? "pickup" : "delivery") + " order and will start on it shortly.";
         if (PAYMENT_PAID.equals(payment)) info += "\nPayment received – thank you!";
@@ -42,8 +50,6 @@ public class ConfirmationActivity extends BaseActivity {
         });
     }
 
-    @Override
-    public void onBackPressed() { backToMenu(); }
 
     private void backToMenu() {
         Intent i = new Intent(this, MainActivity.class);

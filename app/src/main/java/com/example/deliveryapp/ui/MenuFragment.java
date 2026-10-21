@@ -63,6 +63,8 @@ public class MenuFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        if (savedInstanceState != null) { selected = savedInstanceState.getString("category", ALL); query = savedInstanceState.getString("query", ""); }
+        ((TextView)view.findViewById(R.id.etSearch)).setText(query);
         chips = view.findViewById(R.id.chips);
         progress = view.findViewById(R.id.progress);
         errorGroup = view.findViewById(R.id.errorGroup);
@@ -102,6 +104,10 @@ public class MenuFragment extends Fragment {
         view.findViewById(R.id.btnRetry).setOnClickListener(v -> load(true));
 
         load(false);
+    }
+
+    @Override public void onSaveInstanceState(@NonNull Bundle out) {
+        out.putString("category", selected); out.putString("query", query); super.onSaveInstanceState(out);
     }
 
     /** Called by MainActivity after the customer switches branch. */

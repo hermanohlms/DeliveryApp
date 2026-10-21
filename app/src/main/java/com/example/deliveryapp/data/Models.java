@@ -253,8 +253,10 @@ public final class Models {
             SpecialItemRequest copy = new SpecialItemRequest();
             copy.specialId = specialId;
             copy.quantity = value;
-            copy.selections = selections;
-            copy.addons = addons;
+            for (SpecialSelection s : nz(selections)) copy.selections.add(new SpecialSelection(s.componentId, s.selectionIndex,
+                    s.item == null ? null : s.item.copyWithQuantity(s.item.quantity)));
+            for (SpecialAddonSelection a : nz(addons)) copy.addons.add(new SpecialAddonSelection(a.addonId, a.quantity,
+                    a.item == null ? null : a.item.copyWithQuantity(a.item.quantity)));
             return copy;
         }
     }
@@ -283,7 +285,8 @@ public final class Models {
         public OrderItemRequest copyWithQuantity(int q) {
             OrderItemRequest c = new OrderItemRequest();
             c.menuItemId = menuItemId; c.pizzaId = pizzaId; c.sizeCm = sizeCm; c.pizzaBaseOptionId = pizzaBaseOptionId;
-            c.quantity = q; c.customizations = customizations; c.notes = notes;
+            c.quantity = q; c.notes = notes;
+            for (Customization custom : nz(customizations)) c.customizations.add(new Customization(custom.id, custom.quantity, custom.type));
             return c;
         }
     }

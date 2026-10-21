@@ -22,6 +22,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 public class MainActivity extends BaseActivity {
     private static final String TAG_MENU = "menu", TAG_ORDERS = "orders", TAG_PROFILE = "profile";
 
+    private boolean menuVisible = true;
     private TextView tvBranch, tvBadge;
     private BottomNavigationView bottomNav;
     private final Runnable cartListener = this::updateBadge;
@@ -40,6 +41,7 @@ public class MainActivity extends BaseActivity {
         tvBranch.setText(Prefs.get().getBranch().displayName);
 
         findViewById(R.id.branchSelector).setOnClickListener(v -> showBranchMenu());
+        findViewById(R.id.btnViewCart).setOnClickListener(v -> startActivity(new Intent(this, CartActivity.class)));
         findViewById(R.id.cartButton).setOnClickListener(v -> startActivity(new Intent(this, CartActivity.class)));
         findViewById(R.id.btnGuestLogin).setOnClickListener(v -> startActivity(new Intent(this, LoginActivity.class)));
 
@@ -82,6 +84,8 @@ public class MainActivity extends BaseActivity {
         Fragment profile = fm.findFragmentByTag(TAG_PROFILE);
         Fragment target = !Prefs.get().isLoggedIn() ? menu
                 : itemId == R.id.nav_orders ? orders : itemId == R.id.nav_profile ? profile : menu;
+        menuVisible = target == menu;
+        updateBadge();
         FragmentTransaction tx = fm.beginTransaction();
         for (Fragment f : new Fragment[]{menu, orders, profile}) {
             if (f == null) continue;
@@ -125,6 +129,9 @@ public class MainActivity extends BaseActivity {
         int n = Cart.get().count();
         tvBadge.setText(n > 99 ? "99+" : String.valueOf(n));
         Ui.show(tvBadge, n > 0);
+        Ui.show(findViewById(R.id.cartBar), n > 0 && menuVisible && Prefs.get().isLoggedIn());
+        ((TextView)findViewById(R.id.btnViewCart)).setText("View cart · " + n + (n == 1 ? " item · " : " items · ")
+                + com.example.deliveryapp.util.Money.rand(Cart.get().total()));
     }
 
     @Override

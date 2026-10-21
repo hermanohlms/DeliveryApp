@@ -3,9 +3,7 @@ package com.example.deliveryapp.ui;
 import android.content.Context;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,22 +45,84 @@ public final class Ui {
         TextView tv = new TextView(c);
         tv.setText(text);
         tv.setTextAppearance(R.style.Text_Section);
-        int pad = dp(c, 16);
-        tv.setPadding(0, pad, 0, dp(c, 4));
+        tv.setPadding(0, dp(c, 24), 0, dp(c, 6));
+        tv.setTextSize(20);
+        androidx.core.view.ViewCompat.setAccessibilityHeading(tv, true);
         return tv;
     }
 
-    /** One selectable line: a radio button (single choice) or checkbox (multi choice) with an optional price. */
+    /** Stack the action below the stepper when narrow screens or large text need more room. */
+    public static void configureAddBar(android.app.Activity activity) {
+        android.content.res.Configuration config = activity.getResources().getConfiguration();
+        if (config.screenWidthDp >= 360 && config.fontScale <= 1.15f) return;
+        android.widget.LinearLayout row = activity.findViewById(R.id.quantityRow);
+        View action = activity.findViewById(R.id.btnAdd);
+        android.widget.LinearLayout bar = (android.widget.LinearLayout)row.getParent();
+        row.removeView(action); row.setGravity(android.view.Gravity.CENTER);
+        android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(-1, -2);
+        lp.topMargin = dp(activity, 8); action.setLayoutParams(lp); bar.addView(action);
+    }
+
+    public static void enableInputs(View view, boolean enabled) {
+        if (view instanceof android.widget.Button || view instanceof android.widget.EditText) view.setEnabled(enabled);
+        if (view instanceof android.view.ViewGroup) {
+            android.view.ViewGroup group = (android.view.ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) enableInputs(group.getChildAt(i), enabled);
+        }
+    }
+
+    public static TextView sectionHint(Context c, String text) {
+        TextView hint = new TextView(c);
+        hint.setText(text); hint.setTextSize(13);
+        hint.setTextColor(com.google.android.material.color.MaterialColors.getColor(hint, com.google.android.material.R.attr.colorOnSurfaceVariant));
+        hint.setPadding(0, 0, 0, dp(c, 8));
+        return hint;
+    }
+
+    /** A whole-row choice with a dedicated trailing price, separate from the label. */
     public static CompoundButton choiceRow(Context c, String label, Double price, boolean radio, boolean enabled) {
-        CompoundButton b = radio ? new RadioButton(c) : new CheckBox(c);
-        String text = label;
-        if (price != null && price > 0) text += "   (+" + Money.rand(price) + ")";
-        b.setText(text);
-        b.setEnabled(enabled);
-        b.setPadding(dp(c, 8), dp(c, 6), dp(c, 8), dp(c, 6));
-        b.setLayoutParams(new android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT));
-        return b;
+        return new PriceChoice(c, label, price != null && price > 0 ? "+" + Money.rand(price) : "", radio, enabled);
+    }
+
+    public static CompoundButton absoluteChoiceRow(Context c, String label, double price, boolean checked) {
+        CompoundButton row = new PriceChoice(c, label, Money.rand(price), true, true); row.setChecked(checked); return row;
+    }
+
+    private static final class PriceChoice extends androidx.appcompat.widget.AppCompatCheckBox {
+        private final android.graphics.Paint pricePaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final String price;
+        private final boolean radio;
+        PriceChoice(Context c, String label, String amount, boolean radio, boolean enabled) {
+            super(c);
+            this.radio = radio;
+            price = amount;
+            pricePaint.setTextSize(14 * c.getResources().getDisplayMetrics().scaledDensity);
+            pricePaint.setTypeface(android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL));
+            pricePaint.setColor(com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface));
+            if (radio) setButtonDrawable(androidx.core.widget.CompoundButtonCompat.getButtonDrawable(
+                    new androidx.appcompat.widget.AppCompatRadioButton(c)));
+            androidx.core.widget.CompoundButtonCompat.setButtonTintList(this,
+                    androidx.appcompat.content.res.AppCompatResources.getColorStateList(c, R.color.option_control));
+            setText(label); setTextSize(16); setTextColor(com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface));
+            setBackgroundResource(R.drawable.bg_option);
+            setEnabled(enabled); setMinHeight(dp(c, 60)); setGravity(android.view.Gravity.CENTER_VERTICAL);
+            setPadding(dp(c, 12), dp(c, 12), dp(c, 16) + (price.isEmpty() ? 0 : (int)pricePaint.measureText(price) + dp(c, 12)), dp(c, 12));
+            setCompoundDrawablePadding(dp(c, 8));
+            if (!price.isEmpty()) setContentDescription(label + ", " + price);
+            android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(-1, -2);
+            lp.bottomMargin = dp(c, 6); setLayoutParams(lp);
+        }
+        @Override protected void onDraw(android.graphics.Canvas canvas) {
+            super.onDraw(canvas);
+            if (!price.isEmpty()) {
+                pricePaint.setAlpha(isEnabled() ? 255 : 150);
+                float x = getWidth() - dp(getContext(), 16) - pricePaint.measureText(price);
+                float y = (getHeight() - pricePaint.ascent() - pricePaint.descent()) / 2f;
+                canvas.drawText(price, x, y, pricePaint);
+            }
+        }
+        @Override public CharSequence getAccessibilityClassName() {
+            return radio ? "android.widget.RadioButton" : "android.widget.CheckBox";
+        }
     }
 }

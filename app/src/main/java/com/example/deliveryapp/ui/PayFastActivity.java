@@ -40,6 +40,9 @@ public class PayFastActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payfast);
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() { askCancel(); }
+        });
         setupToolbar("Secure payment").setNavigationOnClickListener(v -> askCancel());
 
         Models.PayFastSession s = new Gson().fromJson(getIntent().getStringExtra(EXTRA_SESSION), Models.PayFastSession.class);
@@ -96,8 +99,6 @@ public class PayFastActivity extends BaseActivity {
                 .show();
     }
 
-    @Override
-    public void onBackPressed() { askCancel(); }
 
     @Override
     protected void onSaveInstanceState(Bundle out) {

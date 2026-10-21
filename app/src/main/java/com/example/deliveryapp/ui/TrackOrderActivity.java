@@ -72,7 +72,7 @@ public class TrackOrderActivity extends BaseActivity {
         tvStatus.setText("Loading…");
 
         if (BuildConfig.MAPS_API_KEY.isEmpty()) {
-            mapNote("Add MAPS_API_KEY to local.properties to see the map.");
+            mapNote("The live map is unavailable. You can still follow your order below.");
         } else {
             SupportMapFragment f = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
             f.getMapAsync(m -> {
@@ -138,6 +138,8 @@ public class TrackOrderActivity extends BaseActivity {
     private void show(Models.Tracking t) {
         boolean pickup = "pickup".equals(t.orderType);
         int step = step(t.status);
+        ((TextView)findViewById(R.id.tvOrderMeta)).setText("Order #" + orderId + " · "
+                + (t.branch != null && t.branch.name != null ? t.branch.name + " · " : "") + (pickup ? "Pickup" : "Delivery"));
         tvStatus.setText(t.status == null ? "Order received" : pretty(t.status));
 
         String eta = null;
@@ -187,7 +189,7 @@ public class TrackOrderActivity extends BaseActivity {
         int done = ContextCompat.getColor(this, R.color.steel_blue);
         for (int i = 0; i < labels.length; i++) {
             TextView tv = new TextView(this);
-            tv.setPadding(0, Ui.dp(this, 3), 0, Ui.dp(this, 3));
+            tv.setPadding(0, Ui.dp(this, 10), 0, Ui.dp(this, 10));
             tv.setText((i <= current ? "●  " : "○  ") + labels[i]);
             if (i <= current) tv.setTextColor(done);
             else tv.setTextColor(MaterialColors.getColor(tv, com.google.android.material.R.attr.colorOutline));

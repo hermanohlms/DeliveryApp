@@ -66,11 +66,21 @@ public final class CatalogOptions {
     }
 
     public static List<Models.BurgerTopping> toppings(Models.MenuItem item, List<Models.MenuItem> catalog) {
-        if (!Models.nz(item.burgerToppings).isEmpty()) return item.burgerToppings;
+        if (!Models.nz(item.burgerToppings).isEmpty()) return uniqueToppings(item.burgerToppings);
         for (Models.MenuItem variant : variants(item, catalog)) {
-            if (!isCombo(variant) && !Models.nz(variant.burgerToppings).isEmpty()) return variant.burgerToppings;
+            if (!isCombo(variant) && !Models.nz(variant.burgerToppings).isEmpty()) return uniqueToppings(variant.burgerToppings);
         }
         return List.of();
+    }
+
+    /** The API may list an included component again among extras. Included always wins. */
+    private static List<Models.BurgerTopping> uniqueToppings(List<Models.BurgerTopping> values) {
+        java.util.Map<Integer, Models.BurgerTopping> unique = new java.util.LinkedHashMap<>();
+        for (Models.BurgerTopping topping : Models.nz(values)) {
+            Models.BurgerTopping previous = unique.get(topping.toppingId);
+            if (previous == null || topping.defaultSelected && !previous.defaultSelected) unique.put(topping.toppingId, topping);
+        }
+        return new ArrayList<>(unique.values());
     }
 
     public static List<Models.ModifierGroup> visibleGroups(Models.MenuItem item, Set<Integer> selectedOptionIds) {

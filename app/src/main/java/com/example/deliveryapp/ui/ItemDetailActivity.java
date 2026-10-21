@@ -6,308 +6,155 @@ import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import com.example.deliveryapp.R;
-import com.example.deliveryapp.data.Cart;
-import com.example.deliveryapp.data.CatalogOptions;
-import com.example.deliveryapp.data.Models;
-import com.example.deliveryapp.data.Prefs;
-import com.example.deliveryapp.data.Repo;
+import com.example.deliveryapp.data.*;
 import com.example.deliveryapp.util.Money;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.gson.Gson;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BooleanSupplier;
 
-/** Burgers, pastas, drinks...: modifier groups (sides, sauces) and burger components (protein, toppings). */
+/** Sectioned menu customisation, used both for new items and editing existing cart lines. */
 public class ItemDetailActivity extends BaseActivity {
     public static final String EXTRA_ID = "itemId";
-
-    private static class Binding {
-        final CompoundButton button;
-        final BooleanSupplier checked;
-        Binding(CompoundButton button, BooleanSupplier checked) { this.button = button; this.checked = checked; }
-    }
-
-    private int itemId;
+    private int itemId, qty = 1;
+    private String editId;
     private Models.MenuItem item;
     private List<Models.MenuItem> catalog;
-    private final Map<Integer, Set<Integer>> modifiers = new HashMap<>();   // groupId -> chosen optionIds
-    private final Set<Integer> toppings = new HashSet<>();                  // ticked burger components
-    private final List<Binding> bindings = new ArrayList<>();
-    private int qty = 1;
-
+    private MenuCustomization selection;
+    private Models.OrderItemRequest initial;
     private MaterialToolbar toolbar;
-    private View content, progress, errorGroup;
-    private TextView tvError, tvDesc, tvQty, tvHint;
+    private TextView tvError, tvDesc, tvQty, tvHint, tvNotice;
     private LinearLayout sections, variants;
     private TextInputEditText etNotes;
     private MaterialButton btnAdd;
+    private boolean changed;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    @Override protected void onCreate(Bundle saved) {
+        super.onCreate(saved);
         setContentView(R.layout.activity_item_detail);
-        toolbar = setupToolbar("Item");
+        Ui.configureAddBar(this);
+        toolbar = setupToolbar("Customise your order");
         itemId = getIntent().getIntExtra(EXTRA_ID, -1);
-
-        content = findViewById(R.id.content);
-        progress = findViewById(R.id.progress);
-        errorGroup = findViewById(R.id.errorGroup);
-        tvError = findViewById(R.id.tvError);
-        tvDesc = findViewById(R.id.tvDesc);
-        sections = findViewById(R.id.sections);
-        variants = findViewById(R.id.variants);
-        etNotes = findViewById(R.id.etNotes);
-        tvQty = findViewById(R.id.tvQty);
-        tvHint = findViewById(R.id.tvHint);
-        btnAdd = findViewById(R.id.btnAdd);
-
+        editId = getIntent().getStringExtra(CartEditor.EXTRA_LINE_ID);
+        tvError = findViewById(R.id.tvError); tvDesc = findViewById(R.id.tvDesc);
+        tvNotice = findViewById(R.id.tvNotice); tvQty = findViewById(R.id.tvQty); tvHint = findViewById(R.id.tvHint);
+        sections = findViewById(R.id.sections); variants = findViewById(R.id.variants);
+        etNotes = findViewById(R.id.etNotes); btnAdd = findViewById(R.id.btnAdd);
+        Cart.Line line = editId == null ? null : Cart.get().find(editId);
+        if (editId != null && line == null) { fail("This item is no longer in your cart. Go back to the menu to add it again."); return; }
+        if (saved != null && saved.containsKey("draft")) {
+            initial = new Gson().fromJson(saved.getString("draft"), Models.OrderItemRequest.class);
+            qty = saved.getInt("quantity", 1); itemId = saved.getInt("itemId", itemId);
+            changed = saved.getBoolean("changed");
+        } else if (line != null) { initial = line.request.copyWithQuantity(1); qty = line.quantity; }
+        else if (!getIntent().getBooleanExtra(CartEditor.EXTRA_USE_DEFAULTS, false)) {
+            initial = new Gson().fromJson(getIntent().getStringExtra(CartEditor.EXTRA_INITIAL_REQUEST), Models.OrderItemRequest.class);
+        }
+        if (initial != null) etNotes.setText(initial.notes);
         findViewById(R.id.btnMinus).setOnClickListener(v -> { if (qty > 1) { qty--; updateBar(); } });
         findViewById(R.id.btnPlus).setOnClickListener(v -> { if (qty < 50) { qty++; updateBar(); } });
-        if (getIntent().getBooleanExtra(SpecialDetailActivity.EXTRA_CONFIGURE_FOR_SPECIAL, false)) {
+        if (forSpecial()) {
             findViewById(R.id.btnMinus).setVisibility(View.GONE);
             findViewById(R.id.btnPlus).setVisibility(View.GONE);
+            tvQty.setVisibility(View.GONE);
         }
         findViewById(R.id.btnRetry).setOnClickListener(v -> load());
-        btnAdd.setOnClickListener(v -> addToCart());
-        btnAdd.setEnabled(false);
+        btnAdd.setOnClickListener(v -> save()); btnAdd.setEnabled(false);
         load();
     }
-
+    private boolean forSpecial() { return getIntent().getBooleanExtra(SpecialDetailActivity.EXTRA_CONFIGURE_FOR_SPECIAL, false); }
+    private void fail(String message) {
+        Ui.show(findViewById(R.id.progress), false); Ui.show(findViewById(R.id.content), false);
+        tvError.setText(message); Ui.show(findViewById(R.id.errorGroup), true);
+        btnAdd.setEnabled(false);
+        Ui.show(findViewById(R.id.btnRetry), editId == null || Cart.get().find(editId) != null);
+    }
     private void load() {
-        Ui.show(progress, true); Ui.show(errorGroup, false); Ui.show(content, false);
-        Repo.get().menu(Prefs.get().getBranch().id, false, new Repo.Result<List<Models.MenuItem>>() {
+        Ui.show(findViewById(R.id.progress), true); Ui.show(findViewById(R.id.errorGroup), false);
+        Repo.get().menu(Prefs.get().getBranch().id, editId != null, new Repo.Result<List<Models.MenuItem>>() {
             @Override public void onSuccess(List<Models.MenuItem> items) {
                 if (dead()) return;
-                catalog = items;
-                selectVariant(itemId);
+                catalog = items; selectVariant(itemId);
+                if (selection != null && initial != null) {
+                    changed |= selection.restore(initial); initial = null; render();
+                }
             }
-            @Override public void onError(String message, int code) {
-                if (dead()) return;
-                Ui.show(progress, false);
-                tvError.setText(message);
-                Ui.show(errorGroup, true);
-            }
+            @Override public void onError(String message, int code) { if (!dead()) fail(message); }
         });
     }
-
     private void selectVariant(int id) {
         Models.MenuItem next = CatalogOptions.find(catalog, id);
-        if (next == null) {
-            Ui.show(progress, false);
-            tvError.setText("That item is no longer available.");
-            Ui.show(errorGroup, true);
-            return;
-        }
-        item = next;
-        itemId = id;
-        modifiers.clear();
-        toppings.clear();
-        for (Models.BurgerTopping t : CatalogOptions.toppings(item, catalog)) {
-            if (t.defaultSelected) toppings.add(t.toppingId);
-        }
-        render();
+        if (next == null) { fail("That item is no longer available. Return to the menu to choose another."); return; }
+        item = next; itemId = id; selection = new MenuCustomization(item, catalog); render();
     }
-
-    private List<Models.ModifierGroup> visibleGroups() {
-        Set<Integer> selected = new HashSet<>();
-        for (Set<Integer> values : modifiers.values()) selected.addAll(values);
-        return CatalogOptions.visibleGroups(item, selected);
-    }
-
-    // ------------------------------------------------------------------ rendering
     private void render() {
         toolbar.setTitle(item.name);
-        boolean hasDesc = item.description != null && !item.description.trim().isEmpty();
-        tvDesc.setText(hasDesc ? item.description : "");
-        Ui.show(tvDesc, hasDesc);
-
+        tvDesc.setText(item.description); Ui.show(tvDesc, item.description != null && !item.description.isBlank());
+        tvNotice.setText("Some saved choices have changed. Please review your options before saving."); Ui.show(tvNotice, changed);
+        ((TextView) findViewById(R.id.tvBasePrice)).setText(Money.rand(item.priceOrZero()));
         variants.removeAllViews();
         List<Models.MenuItem> family = CatalogOptions.variants(item, catalog);
-        if (family.size() > 1 && !getIntent().getBooleanExtra(SpecialDetailActivity.EXTRA_CONFIGURE_FOR_SPECIAL, false)) {
+        if (family.size() > 1 && !forSpecial()) {
             variants.addView(Ui.sectionTitle(this, "Choose an option"));
+            variants.addView(Ui.sectionHint(this, "Required · Choose one"));
             for (Models.MenuItem variant : family) {
-                CompoundButton row = Ui.choiceRow(this,
-                        CatalogOptions.variantLabel(variant) + " · " + Money.rand(variant.priceOrZero()),
-                        null, true, true);
-                row.setOnClickListener(v -> selectVariant(variant.menuItemId));
-                row.setChecked(variant.menuItemId == itemId);
-                variants.addView(row);
+                CompoundButton row = Ui.absoluteChoiceRow(this, CatalogOptions.variantLabel(variant), variant.priceOrZero(), variant.menuItemId == itemId);
+                row.setOnClickListener(v -> selectVariant(variant.menuItemId)); variants.addView(row);
             }
         }
         sections.removeAllViews();
-        bindings.clear();
-
-        final List<Models.BurgerTopping> all = CatalogOptions.toppings(item, catalog);
-        List<Models.BurgerTopping> proteins = new ArrayList<>();
-        List<Models.BurgerTopping> others = new ArrayList<>();
-        for (Models.BurgerTopping t : all) { if (t.isProtein()) proteins.add(t); else others.add(t); }
-
-        if (!proteins.isEmpty()) {
-            sections.addView(Ui.sectionTitle(this, "Choose your protein"));
-            for (final Models.BurgerTopping t : proteins) {
-                CompoundButton row = Ui.choiceRow(this, t.name, t.defaultSelected ? null : t.price, true, true);
-                row.setOnClickListener(v -> { toggleTopping(t, all); sync(); });
-                bindings.add(new Binding(row, () -> toppings.contains(t.toppingId)));
-                sections.addView(row);
+        toppingSection("Choose your protein", "Required · Choose one", selection.proteins(), true);
+        toppingSection("Default toppings", "Untick any topping you would like removed", selection.defaults(), false);
+        toppingSection("Extras", "Optional · Make it your own", selection.extras(), false);
+        for (Models.ModifierGroup group : selection.visibleGroups()) {
+            sections.addView(Ui.sectionTitle(this, group.name));
+            sections.addView(Ui.sectionHint(this, group.minRequired() > 0 ? "Required · Choose " + (group.maxAllowed() == 1 ? "one" : "at least " + group.minRequired()) : "Optional"));
+            for (Models.ModifierOption option : Models.nz(group.options)) {
+                CompoundButton row = Ui.choiceRow(this, option.name, option.price, group.maxAllowed() == 1, true);
+                row.setChecked(selection.selected(group, option.optionId));
+                row.setOnClickListener(v -> { selection.toggle(group, option.optionId); render(); }); sections.addView(row);
             }
         }
-        if (!others.isEmpty()) {
-            sections.addView(Ui.sectionTitle(this, "Toppings"));
-            for (final Models.BurgerTopping t : others) {
-                boolean locked = t.defaultSelected && !t.isRemovable();
-                CompoundButton row = Ui.choiceRow(this, t.name, t.defaultSelected ? null : t.price, false, !locked);
-                row.setOnClickListener(v -> { toggleTopping(t, all); sync(); });
-                bindings.add(new Binding(row, () -> toppings.contains(t.toppingId)));
-                sections.addView(row);
-            }
-        }
-        for (final Models.ModifierGroup g : visibleGroups()) {
-            sections.addView(Ui.sectionTitle(this, g.name + (g.minRequired() > 0 ? " (required)" : "")));
-            final boolean single = g.maxAllowed() == 1;
-            for (final Models.ModifierOption o : Models.nz(g.options)) {
-                CompoundButton row = Ui.choiceRow(this, o.name, o.price,
-                        single && g.minRequired() > 0, true);
-                row.setOnClickListener(v -> { toggleModifier(g, o.optionId); render(); });
-                bindings.add(new Binding(row, () -> chosen(g).contains(o.optionId)));
-                sections.addView(row);
-            }
-        }
-
-        Ui.show(progress, false);
-        Ui.show(errorGroup, false);
-        Ui.show(content, true);
-        sync();
+        Ui.show(findViewById(R.id.progress), false); Ui.show(findViewById(R.id.errorGroup), false);
+        Ui.show(findViewById(R.id.content), true); updateBar();
     }
-
-    private Set<Integer> chosen(Models.ModifierGroup g) {
-        Set<Integer> s = modifiers.get(g.groupId);
-        return s == null ? new HashSet<Integer>() : s;
-    }
-
-    private void sync() {
-        for (Binding b : bindings) b.button.setChecked(b.checked.getAsBoolean());
-        updateBar();
-    }
-
-    // ------------------------------------------------------------------ selection rules
-    private void toggleModifier(Models.ModifierGroup g, int optionId) {
-        Set<Integer> current = new HashSet<>(chosen(g));
-        int max = g.maxAllowed();
-        if (max == 1) {
-            current.clear();
-            if (!(g.minRequired() == 0 && chosen(g).contains(optionId))) current.add(optionId);
-        } else if (current.contains(optionId)) {
-            current.remove(optionId);
-        } else if (max > 0 && current.size() >= max) {
-            return;   // at the limit
-        } else {
-            current.add(optionId);
-        }
-        modifiers.put(g.groupId, current);
-    }
-
-    private void toggleTopping(Models.BurgerTopping t, List<Models.BurgerTopping> all) {
-        if (t.isProtein()) {
-            for (Models.BurgerTopping p : all) if (p.isProtein()) toppings.remove(p.toppingId);
-            toppings.add(t.toppingId);
-        } else if (toppings.contains(t.toppingId)) {
-            if (!(t.defaultSelected && !t.isRemovable())) toppings.remove(t.toppingId);
-        } else {
-            toppings.add(t.toppingId);
+    private void toppingSection(String title, String hint, List<Models.BurgerTopping> values, boolean radio) {
+        if (values.isEmpty()) return;
+        sections.addView(Ui.sectionTitle(this, title)); sections.addView(Ui.sectionHint(this, hint));
+        for (Models.BurgerTopping topping : values) {
+            CompoundButton row = Ui.choiceRow(this, topping.name, topping.defaultSelected ? null : topping.price,
+                    radio, !topping.defaultSelected || topping.isRemovable() || topping.isProtein());
+            row.setChecked(selection.selected(topping.toppingId));
+            row.setOnClickListener(v -> { selection.toggle(topping); render(); }); sections.addView(row);
         }
     }
-
-    /** First reason the selection is incomplete, or null when it can be added. */
-    private String problem() {
-        if (item == null) return null;
-        for (Models.ModifierGroup g : visibleGroups()) {
-            int min = g.minRequired();
-            if (chosen(g).size() < min) {
-                return "Choose " + (min > 1 ? "at least " + min + " for " : "") + g.name;
-            }
-        }
-        int proteins = 0, picked = 0;
-        for (Models.BurgerTopping t : CatalogOptions.toppings(item, catalog)) {
-            if (t.isProtein()) { proteins++; if (toppings.contains(t.toppingId)) picked++; }
-        }
-        if (proteins > 0 && picked != 1) return "Choose your protein";
-        return null;
-    }
-
-    private double unitPrice() {
-        if (item == null) return 0.0;
-        double total = item.priceOrZero();
-        for (Models.ModifierGroup g : visibleGroups()) {
-            for (Models.ModifierOption o : Models.nz(g.options)) {
-                if (chosen(g).contains(o.optionId) && o.price != null) total += o.price;
-            }
-        }
-        // anything that isn't a default component costs extra
-        for (Models.BurgerTopping t : CatalogOptions.toppings(item, catalog)) {
-            if (toppings.contains(t.toppingId) && !t.defaultSelected) total += t.priceOrZero();
-        }
-        return total;
-    }
-
     private void updateBar() {
         tvQty.setText(String.valueOf(qty));
-        String problem = problem();
-        tvHint.setText(problem == null ? "" : problem);
-        Ui.show(tvHint, problem != null);
-        btnAdd.setText("Add to cart · " + Money.rand(unitPrice() * qty));
-        btnAdd.setEnabled(item != null && problem == null);
+        String problem = selection == null ? null : selection.problem();
+        tvHint.setText(problem); Ui.show(tvHint, problem != null);
+        String action = forSpecial() ? "Save choices" : editId == null ? "Add to cart" : "Update cart";
+        btnAdd.setText(action + " · " + Money.rand(selection == null ? 0 : selection.unitPrice() * qty));
+        btnAdd.setEnabled(selection != null && problem == null);
+        findViewById(R.id.btnMinus).setEnabled(qty > 1); findViewById(R.id.btnPlus).setEnabled(qty < 50);
     }
-
-    // ------------------------------------------------------------------ add to cart
-    private void addToCart() {
-        if (item == null || problem() != null) return;
-        Models.OrderItemRequest req = new Models.OrderItemRequest();
-        req.menuItemId = item.menuItemId;
-        req.quantity = 1;
-        List<String> names = new ArrayList<>();
-
-        for (Models.ModifierGroup g : visibleGroups()) {
-            for (Models.ModifierOption o : Models.nz(g.options)) {
-                if (chosen(g).contains(o.optionId)) {
-                    req.customizations.add(new Models.Customization(o.optionId, 1, "modifierOption"));
-                    names.add(o.name);
-                }
-            }
-        }
-        for (Models.BurgerTopping t : CatalogOptions.toppings(item, catalog)) {
-            boolean on = toppings.contains(t.toppingId);
-            if (on) {
-                // kept defaults + the protein -> burgerTopping; anything else is a paid extra
-                String type = (t.defaultSelected || t.isProtein()) ? "burgerTopping" : "burgerExtra";
-                req.customizations.add(new Models.Customization(t.toppingId, 1, type));
-                if (t.isProtein()) names.add(t.name); else if (!t.defaultSelected) names.add("+ " + t.name);
-            } else if (t.defaultSelected && !t.isProtein()) {
-                names.add("no " + t.name);
-            }
-        }
-        String notes = Ui.text(etNotes);
-        req.notes = notes.isEmpty() ? null : notes;
-
-        if (getIntent().getBooleanExtra(SpecialDetailActivity.EXTRA_CONFIGURE_FOR_SPECIAL, false)) {
-            Intent result = new Intent();
-            result.putExtra(SpecialDetailActivity.EXTRA_CONFIGURED_REQUEST, new Gson().toJson(req));
-            result.putExtra(SpecialDetailActivity.EXTRA_CONFIGURED_DETAIL, String.join(" · ", names));
-            result.putExtra(SpecialDetailActivity.EXTRA_CONFIGURED_PRICE, unitPrice());
+    private void save() {
+        if (selection == null || selection.problem() != null) return;
+        Models.OrderItemRequest request = selection.request(Ui.text(etNotes));
+        if (forSpecial()) {
+            Intent result = new Intent().putExtra(SpecialDetailActivity.EXTRA_CONFIGURED_REQUEST, new Gson().toJson(request))
+                    .putExtra(SpecialDetailActivity.EXTRA_CONFIGURED_DETAIL, selection.summary())
+                    .putExtra(SpecialDetailActivity.EXTRA_CONFIGURED_PRICE, selection.unitPrice());
             setResult(RESULT_OK, result);
-        } else {
-            Cart.get().add(new Cart.Line(item.name, String.join(" · ", names), unitPrice(), qty, req));
-            Ui.toast(this, "Added to cart");
+        } else if (!CartEditor.save(this, editId, new Cart.Line(item.name, selection.summary(), selection.unitPrice(), qty, request))) {
+            fail("This item is no longer in your cart. Go back to the menu to add it again."); return;
         }
         finish();
+    }
+    @Override protected void onSaveInstanceState(Bundle out) {
+        if (selection != null) out.putString("draft", new Gson().toJson(selection.request(Ui.text(etNotes))));
+        out.putInt("quantity", qty); out.putInt("itemId", itemId); out.putBoolean("changed", changed);
+        super.onSaveInstanceState(out);
     }
 }

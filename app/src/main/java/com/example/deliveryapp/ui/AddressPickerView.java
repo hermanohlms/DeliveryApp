@@ -1,6 +1,7 @@
 package com.example.deliveryapp.ui;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
@@ -45,6 +46,8 @@ public class AddressPickerView extends LinearLayout {
     private Runnable pendingSearch;
     private Listener listener;
     private String errorText;
+    private String infoText;
+    private int requestVersion;
 
     public AddressPickerView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -62,8 +65,10 @@ public class AddressPickerView extends LinearLayout {
             @Override public void afterTextChanged(Editable s) {
                 if (settingText) return;
                 boolean had = selection != null;
+                requestVersion++;
                 selection = null;
                 errorText = null;
+                infoText = null;
                 updateStatus();
                 if (had && listener != null) listener.onAddressChanged(null);
                 scheduleSearch(s.toString().trim());
@@ -80,12 +85,15 @@ public class AddressPickerView extends LinearLayout {
 
     /** Pre-fill (e.g. from the saved profile) without starting a search. */
     public void setSelection(Models.AddressSelection s) {
+        requestVersion++;
+        if (pendingSearch != null) handler.removeCallbacks(pendingSearch);
         selection = s;
         settingText = true;
         input.setText(s == null || s.formattedAddress == null ? "" : s.formattedAddress);
         settingText = false;
         suggestions.removeAllViews();
         errorText = null;
+        infoText = null;
         updateStatus();
     }
 
@@ -97,21 +105,30 @@ public class AddressPickerView extends LinearLayout {
     private void scheduleSearch(final String query) {
         if (pendingSearch != null) handler.removeCallbacks(pendingSearch);
         suggestions.removeAllViews();
-        if (client == null || query.length() < 2) return;
-        pendingSearch = () -> search(query);
+        if (client == null) return;
+        if (query.length() < 2) {
+            infoText = query.isEmpty() ? null : "Type at least 2 characters to search.";
+            updateStatus();
+            return;
+        }
+        final int version = requestVersion;
+        infoText = "Searching for addresses…";
+        updateStatus();
+        pendingSearch = () -> search(query, version);
         handler.postDelayed(pendingSearch, 300);
     }
 
-    private void search(final String query) {
+    private void search(final String query, final int version) {
         FindAutocompletePredictionsRequest request = FindAutocompletePredictionsRequest.builder()
                 .setQuery(query).setCountries("ZA").setSessionToken(token).build();
         client.findAutocompletePredictions(request)
                 .addOnSuccessListener(response -> {
-                    String current = input.getText() == null ? "" : input.getText().toString().trim();
-                    if (!current.equals(query) || selection != null) return;   // stale result
+                    if (version != requestVersion || selection != null) return;
                     showSuggestions(response.getAutocompletePredictions());
                 })
                 .addOnFailureListener(e -> {
+                    if (version != requestVersion) return;
+                    infoText = null;
                     errorText = "Address search failed. Check your connection and Maps key.";
                     updateStatus();
                 });
@@ -119,38 +136,61 @@ public class AddressPickerView extends LinearLayout {
 
     private void showSuggestions(List<AutocompletePrediction> predictions) {
         suggestions.removeAllViews();
-        for (final AutocompletePrediction p : predictions) {
+        List<AutocompletePrediction> visible = predictions.subList(0, Math.min(5, predictions.size()));
+        infoText = predictions.isEmpty()
+                ? "No matching addresses. Add a street number or suburb."
+                : visible.size() + " address suggestion" + (visible.size() == 1 ? "" : "s") + " available.";
+        updateStatus();
+        for (final AutocompletePrediction p : visible) {
             TextView row = new TextView(getContext());
             row.setText(p.getFullText(null));
             int pad = Ui.dp(getContext(), 12);
             row.setPadding(Ui.dp(getContext(), 8), pad, Ui.dp(getContext(), 8), pad);
+            row.setMinHeight(Ui.dp(getContext(), 48));
             row.setBackgroundResource(android.R.drawable.list_selector_background);
             row.setClickable(true);
             row.setOnClickListener((View v) -> choose(p));
             suggestions.addView(row);
         }
+        if (!predictions.isEmpty()) {
+            // The keyboard otherwise covers results directly below this field on small screens.
+            suggestions.post(() -> {
+                if (suggestions.getChildCount() == 0 || selection != null) return;
+                View first = suggestions.getChildAt(0);
+                first.requestRectangleOnScreen(new Rect(0, 0, first.getWidth(), first.getHeight()), false);
+            });
+        }
     }
 
     private void choose(AutocompletePrediction p) {
+        final int version = ++requestVersion;
+        if (pendingSearch != null) handler.removeCallbacks(pendingSearch);
         suggestions.removeAllViews();
+        infoText = "Loading address details…";
+        errorText = null;
+        updateStatus();
         Ui.hideKeyboard(input);
         List<Place.Field> fields = Arrays.asList(
                 Place.Field.ID, Place.Field.ADDRESS, Place.Field.LAT_LNG, Place.Field.ADDRESS_COMPONENTS);
         FetchPlaceRequest request = FetchPlaceRequest.builder(p.getPlaceId(), fields).setSessionToken(token).build();
         client.fetchPlace(request)
                 .addOnSuccessListener(response -> {
+                    if (version != requestVersion) return;
                     Models.AddressSelection result = toSelection(response.getPlace());
                     token = AutocompleteSessionToken.newInstance();   // a session ends when the place is fetched
                     selection = result;
                     settingText = true;
                     input.setText(result.formattedAddress == null ? "" : result.formattedAddress);
                     settingText = false;
+                    infoText = null;
                     errorText = result.isVerified() ? null
                             : "That address is missing a street or suburb. Pick a more specific one.";
                     updateStatus();
                     if (listener != null) listener.onAddressChanged(result);
                 })
                 .addOnFailureListener(e -> {
+                    if (version != requestVersion) return;
+                    infoText = null;
                     errorText = "Couldn't load that address. Try again.";
                     updateStatus();
                 });
@@ -194,6 +234,9 @@ public class AddressPickerView extends LinearLayout {
             status.setTextColor(getResources().getColor(R.color.steel_blue, null));
         } else if (client == null) {
             status.setText("Address search is off: add MAPS_API_KEY to local.properties.");
+            status.setTextColor(outline);
+        } else if (infoText != null) {
+            status.setText(infoText);
             status.setTextColor(outline);
         } else {
             status.setText("Start typing, then pick your address from the list.");

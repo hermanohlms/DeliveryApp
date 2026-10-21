@@ -36,6 +36,30 @@ public final class SpecialCustomization {
                 Math.min(quantity, Math.max(1, addon.maxQuantity)), item));
     }
 
+    /** Work on independent nested requests so cancelling an edit cannot mutate the cart. */
+    public boolean restore(Models.SpecialItemRequest request) {
+        selections.clear(); addons.clear(); setQuantity(request.quantity);
+        boolean changed = false;
+        for (Models.SpecialSelection choice : Models.nz(request.selections)) {
+            Models.SpecialComponent component = Models.nz(special.components).stream()
+                    .filter(c -> c.id == choice.componentId).findFirst().orElse(null);
+            if (component != null && choice.item != null && choice.selectionIndex > 0
+                    && choice.selectionIndex <= component.quantity && allowed(component, productId(choice.item))
+                    && (component.sizeCm == null || component.sizeCm.equals(choice.item.sizeCm))) {
+                select(component, choice.selectionIndex, choice.item.copyWithQuantity(1));
+            } else changed = true;
+        }
+        for (Models.SpecialAddonSelection choice : Models.nz(request.addons)) {
+            Models.SpecialAddon addon = Models.nz(special.addons).stream().filter(a -> a.id == choice.addonId && a.active).findFirst().orElse(null);
+            if (addon != null && choice.item != null && productId(choice.item) == addon.productId
+                    && (addon.sizeCm == null || addon.sizeCm.equals(choice.item.sizeCm)) && choice.quantity > 0) {
+                setAddon(addon, choice.quantity, choice.item.copyWithQuantity(1));
+                changed |= choice.quantity > addon.maxQuantity;
+            } else changed = true;
+        }
+        return changed;
+    }
+
     public String problem() {
         if (!special.availableToday) return "This special is not available today.";
         for (Models.SpecialComponent component : Models.nz(special.components)) {

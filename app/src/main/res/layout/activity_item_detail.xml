@@ -7,9 +7,16 @@
         app:navigationIcon="@drawable/ic_arrow_back" app:title="Item" />
     <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
         <ScrollView android:id="@+id/content" android:layout_width="match_parent" android:layout_height="match_parent"
-            android:visibility="gone">
+            android:visibility="gone" android:fillViewport="true">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:orientation="vertical" android:padding="16dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Make it yours" android:textAppearance="@style/Text.Page" android:layout_marginBottom="8dp"/>
+                <TextView android:id="@+id/tvBasePrice" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="20sp" android:textStyle="bold" android:textColor="@color/terracotta" android:layout_marginBottom="8dp"/>
+                <TextView android:id="@+id/tvNotice" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:background="@color/steel_blue_soft" android:padding="12dp" android:visibility="gone"
+                    android:accessibilityLiveRegion="polite" android:textColor="@color/gunmetal"/>
                 <TextView android:id="@+id/tvDesc" android:layout_width="wrap_content" android:layout_height="wrap_content"
                     android:textColor="?attr/colorOutline" />
                 <LinearLayout android:id="@+id/variants" android:layout_width="match_parent" android:layout_height="wrap_content"

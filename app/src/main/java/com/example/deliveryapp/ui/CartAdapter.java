@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.Holder> {
+    public interface Listener { void edit(Cart.Line line); }
+    private final Listener listener;
+    public CartAdapter(Listener listener) { this.listener = listener; }
     private final List<Cart.Line> lines = new ArrayList<>();
 
     public void submit(List<Cart.Line> newLines) {
@@ -37,6 +40,14 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.Holder> {
         h.price.setText(Money.rand(line.unitPrice * line.quantity));
         h.detail.setText(line.detail);
         Ui.show(h.detail, line.detail != null && !line.detail.isEmpty());
+        String notes = CartEditor.notes(line);
+        h.notes.setText(notes == null ? "" : "Kitchen note: " + notes); Ui.show(h.notes, notes != null && !notes.isBlank());
+        h.edit.setOnClickListener(v -> listener.edit(line));
+        h.edit.setContentDescription("Edit " + line.name);
+        h.remove.setContentDescription("Remove " + line.name);
+        h.minus.setContentDescription("Decrease " + line.name + " quantity");
+        h.plus.setContentDescription("Increase " + line.name + " quantity");
+        h.plus.setEnabled(line.quantity < 50);
         h.qty.setText(String.valueOf(line.quantity));
         h.minus.setOnClickListener(v -> Cart.get().setQuantity(line.id, line.quantity - 1));
         h.plus.setOnClickListener(v -> Cart.get().setQuantity(line.id, line.quantity + 1));
@@ -46,13 +57,14 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.Holder> {
     @Override public int getItemCount() { return lines.size(); }
 
     static class Holder extends RecyclerView.ViewHolder {
-        final TextView name, price, detail, qty;
-        final View minus, plus, remove;
+        final TextView name, price, detail, notes, qty;
+        final View minus, plus, remove, edit;
         Holder(View v) {
             super(v);
             name = v.findViewById(R.id.tvName);
             price = v.findViewById(R.id.tvLinePrice);
             detail = v.findViewById(R.id.tvDetail);
+            notes = v.findViewById(R.id.tvNotes); edit = v.findViewById(R.id.btnEdit);
             qty = v.findViewById(R.id.tvQty);
             minus = v.findViewById(R.id.btnMinus);
             plus = v.findViewById(R.id.btnPlus);

@@ -5,18 +5,28 @@
         android:id="@+id/toolbar" style="@style/Widget.App.Toolbar"
         android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
         app:navigationIcon="@drawable/ic_arrow_back" app:title="Your cart" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Your order"
+        android:textAppearance="@style/Text.Page" android:layout_marginHorizontal="16dp" android:layout_marginTop="20dp"/>
+    <TextView android:id="@+id/tvCartCount" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp" android:layout_marginTop="4dp" android:layout_marginBottom="8dp" android:textColor="?attr/colorOutline"/>
     <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
         <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvCart" android:layout_width="match_parent"
             android:layout_height="match_parent" android:clipToPadding="false" android:padding="8dp" />
-        <TextView android:id="@+id/tvEmpty" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_gravity="center" android:gravity="center" android:padding="32dp"
-            android:text="Your cart is empty. Add something tasty from the menu." android:visibility="gone" />
+        <LinearLayout android:id="@+id/tvEmpty" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_gravity="center" android:gravity="center" android:padding="32dp" android:orientation="vertical" android:visibility="gone">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Something tasty awaits"
+                android:textAppearance="@style/Text.Section" android:gravity="center"/>
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center"
+                android:layout_marginTop="8dp" android:text="Your cart is empty. Find your next favourite on the menu." android:textColor="?attr/colorOutline"/>
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnBrowse" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Browse menu"/>
+        </LinearLayout>
     </FrameLayout>
     <LinearLayout android:id="@+id/footer" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:background="?attr/colorSurface" android:elevation="8dp" android:orientation="vertical" android:padding="16dp">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:text="Estimated total" android:textStyle="bold" />
+                android:text="Estimated subtotal" android:textStyle="bold" />
             <TextView android:id="@+id/tvTotal" android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -24,7 +34,7 @@
             android:text="The restaurant confirms the final price when it accepts your order."
             android:textColor="?attr/colorOutline" android:textSize="12sp" />
         <com.google.android.material.button.MaterialButton 
-        android:id="@+id/btnCheckout" android:layout_width="match_parent" android:layout_height="56dp"
+        android:id="@+id/btnCheckout" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp"
         android:layout_marginTop="12dp" android:text="Checkout" android:textStyle="bold" />
     </LinearLayout>
 </LinearLayout>

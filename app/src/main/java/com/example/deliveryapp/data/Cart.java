@@ -11,7 +11,7 @@ public final class Cart {
     public static Cart get() { return INSTANCE; }
 
     public static class Line {
-        public final String id = UUID.randomUUID().toString();
+        public final String id;
         public final String name;
         public String detail;      // readable options, e.g. "30cm · Thin base · + Bacon"
         public double unitPrice;   // estimate only; the server recalculates
@@ -20,14 +20,41 @@ public final class Cart {
         public final Models.SpecialItemRequest specialRequest;
 
         public Line(String name, String detail, double unitPrice, int quantity, Models.OrderItemRequest request) {
+            this.id = UUID.randomUUID().toString();
             this.name = name; this.detail = detail; this.unitPrice = unitPrice;
             this.quantity = quantity; this.request = request; this.specialRequest = null;
         }
 
+        public java.util.Map<String, String> componentDetails = new java.util.HashMap<>();
+
+        private Line(String id, Line other) {
+            this.id = id; name = other.name; detail = other.detail; unitPrice = other.unitPrice;
+            quantity = other.quantity; request = other.request; specialRequest = other.specialRequest;
+            componentDetails = new java.util.HashMap<>(other.componentDetails);
+        }
+
         public Line(String name, String detail, double unitPrice, int quantity, Models.SpecialItemRequest request) {
+            this.id = UUID.randomUUID().toString();
             this.name = name; this.detail = detail; this.unitPrice = unitPrice;
             this.quantity = quantity; this.request = null; this.specialRequest = request;
         }
+    }
+
+    public Line find(String id) {
+        for (Line line : lines) if (line.id.equals(id)) return line;
+        return null;
+    }
+
+    /** Replace atomically at the same position; never turn a stale edit into a new item. */
+    public boolean replace(String id, Line replacement) {
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).id.equals(id)) {
+                lines.set(i, new Line(id, replacement));
+                notifyChanged();
+                return true;
+            }
+        }
+        return false;
     }
 
     private final List<Line> lines = new ArrayList<>();

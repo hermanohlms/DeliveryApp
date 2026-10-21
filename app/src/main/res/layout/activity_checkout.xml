@@ -1,96 +1,58 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar" style="@style/Widget.App.Toolbar"
-        android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
-        app:navigationIcon="@drawable/ic_arrow_back" app:title="Checkout" />
+<?xml version='1.0' encoding='utf-8'?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+    <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" style="@style/Widget.App.Toolbar" android:layout_width="match_parent" android:layout_height="?attr/actionBarSize" app:navigationIcon="@drawable/ic_arrow_back" app:title="Checkout" />
     <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="vertical" android:padding="16dp">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_marginTop="0dp" android:layout_marginBottom="4dp" android:text="How would you like it?"
-        android:textAppearance="@style/Text.Section" />
-            <com.google.android.material.chip.ChipGroup android:id="@+id/chipsType" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" app:singleSelection="true" app:selectionRequired="true">
-                <com.google.android.material.chip.Chip android:id="@+id/chipDelivery" style="@style/Widget.App.Chip"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content" android:checkable="true"
-                    android:checked="true" android:text="Delivery" />
-                <com.google.android.material.chip.Chip android:id="@+id/chipPickup" style="@style/Widget.App.Chip"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content" android:checkable="true"
-                    android:text="Pick up" />
-            </com.google.android.material.chip.ChipGroup>
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" android:layout_marginBottom="4dp" android:text="Your details"
-        android:textAppearance="@style/Text.Section" />
-            <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="0dp" android:hint="Full name" >
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etName" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:inputType="textPersonName|textCapWords" android:maxLines="1"/>
-    </com.google.android.material.textfield.TextInputLayout>
-            <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" android:hint="Phone" >
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etPhone" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:inputType="phone" android:maxLines="1"/>
-    </com.google.android.material.textfield.TextInputLayout>
-            <LinearLayout android:id="@+id/deliveryGroup" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" android:layout_marginBottom="4dp" android:text="Delivery address"
-        android:textAppearance="@style/Text.Section" />
-                <com.example.deliveryapp.ui.AddressPickerView android:id="@+id/checkoutAddress"
-                    android:layout_width="match_parent" android:layout_height="wrap_content" />
-                <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" android:hint="Complex / unit (optional)" >
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etComplex" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:inputType="text" android:maxLines="1"/>
-    </com.google.android.material.textfield.TextInputLayout>
-                <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" android:hint="Gate access code (optional)" >
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etGate" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:inputType="text" android:maxLines="1" android:maxLength="64"/>
-    </com.google.android.material.textfield.TextInputLayout>
-            </LinearLayout>
-            <LinearLayout android:id="@+id/paymentGroup" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" android:layout_marginBottom="4dp" android:text="Payment"
-        android:textAppearance="@style/Text.Section" />
-                <com.google.android.material.chip.ChipGroup android:id="@+id/chipsPayment" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" app:singleSelection="true" app:selectionRequired="true">
-                    <com.google.android.material.chip.Chip android:id="@+id/chipPayFast" style="@style/Widget.App.Chip"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content" android:checkable="true"
-                        android:checked="true" android:text="Card / EFT (PayFast)" />
-                    <com.google.android.material.chip.Chip android:id="@+id/chipCash" style="@style/Widget.App.Chip"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content" android:checkable="true"
-                        android:text="Cash on delivery" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="One last thing…" android:textAppearance="@style/Text.Page" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Review your order and make it official." android:textColor="?attr/colorOutline" android:layout_marginTop="4dp" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp" android:background="@drawable/bg_surface" android:layout_marginTop="12dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:layout_marginBottom="8dp" android:text="How would you like it?" android:textAppearance="@style/Text.Section" />
+                <com.google.android.material.chip.ChipGroup android:id="@+id/chipsType" android:layout_width="wrap_content" android:layout_height="wrap_content" app:singleSelection="true" app:selectionRequired="true">
+                    <com.google.android.material.chip.Chip android:id="@+id/chipDelivery" style="@style/Widget.App.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checkable="true" android:checked="true" android:text="Delivery" />
+                    <com.google.android.material.chip.Chip android:id="@+id/chipPickup" style="@style/Widget.App.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checkable="true" android:text="Pick up" />
                 </com.google.android.material.chip.ChipGroup>
             </LinearLayout>
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" android:layout_marginBottom="4dp" android:text="Order summary"
-        android:textAppearance="@style/Text.Section" />
-            <LinearLayout android:id="@+id/summary" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="vertical" />
-            <TextView android:id="@+id/tvPriceNote" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
-                android:text="The restaurant confirms the final price (including any delivery charge) when it accepts your order."
-                android:textColor="?attr/colorOutline" android:textSize="12sp" />
-            <TextView android:id="@+id/tvMessage" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="12dp" android:visibility="gone" />
-            <com.google.android.material.button.MaterialButton 
-        android:id="@+id/btnPlace" android:layout_width="match_parent" android:layout_height="56dp"
-        android:layout_marginTop="16dp" android:text="Place order" android:textStyle="bold" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp" android:background="@drawable/bg_surface" android:layout_marginTop="12dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:layout_marginBottom="8dp" android:text="Your details" android:textAppearance="@style/Text.Section" />
+                <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:hint="Full name">
+                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/etName" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textPersonName|textCapWords" android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:hint="Phone">
+                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/etPhone" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="phone" android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+                <LinearLayout android:id="@+id/deliveryGroup" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:layout_marginBottom="4dp" android:text="Delivery address" android:textAppearance="@style/Text.Section" />
+                    <com.example.deliveryapp.ui.AddressPickerView android:id="@+id/checkoutAddress" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:hint="Complex / unit (optional)">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/etComplex" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" android:maxLines="1" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:hint="Gate access code (optional)">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/etGate" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" android:maxLines="1" android:maxLength="64" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp" android:background="@drawable/bg_surface" android:layout_marginTop="12dp">
+                <LinearLayout android:id="@+id/paymentGroup" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:layout_marginBottom="4dp" android:text="Payment" android:textAppearance="@style/Text.Section" />
+                    <com.google.android.material.chip.ChipGroup android:id="@+id/chipsPayment" android:layout_width="wrap_content" android:layout_height="wrap_content" app:singleSelection="true" app:selectionRequired="true">
+                        <com.google.android.material.chip.Chip android:id="@+id/chipPayFast" style="@style/Widget.App.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checkable="true" android:checked="true" android:text="Card / EFT (PayFast)" />
+                        <com.google.android.material.chip.Chip android:id="@+id/chipCash" style="@style/Widget.App.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checkable="true" android:text="Cash on delivery" />
+                    </com.google.android.material.chip.ChipGroup>
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp" android:background="@drawable/bg_surface" android:layout_marginTop="12dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:layout_marginBottom="8dp" android:text="Order summary" android:textAppearance="@style/Text.Section" />
+                <LinearLayout android:id="@+id/summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+            </LinearLayout>
+            <TextView android:id="@+id/tvMessage" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:visibility="gone" />
         </LinearLayout>
     </ScrollView>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp" android:background="?attr/colorSurface" android:elevation="8dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Estimated subtotal" android:textStyle="bold" />
+            <TextView android:id="@+id/tvCheckoutSubtotal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textStyle="bold" android:textSize="18sp" />
+        </LinearLayout>
+        <TextView android:id="@+id/tvPriceNote" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="The restaurant confirms the final price (including any delivery charge) when it accepts your order." android:textColor="?attr/colorOutline" android:textSize="12sp" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnPlace" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Place order" android:textStyle="bold" android:minHeight="56dp" />
+    </LinearLayout>
 </LinearLayout>

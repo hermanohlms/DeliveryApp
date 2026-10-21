@@ -36,6 +36,9 @@ public class PizzaDetailActivity extends BaseActivity {
         Binding(CompoundButton button, BooleanSupplier checked) { this.button = button; this.checked = checked; }
     }
 
+    private String editId;
+    private Models.OrderItemRequest initial;
+    private boolean changed;
     private int pizzaId;
     private int branchId;
     private Integer lockedSizeCm;
@@ -58,9 +61,11 @@ public class PizzaDetailActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pizza_detail);
+        Ui.configureAddBar(this);
         toolbar = setupToolbar("Pizza");
         pizzaId = getIntent().getIntExtra(EXTRA_ID, -1);
         branchId = Prefs.get().getBranch().id;
+        editId = getIntent().getStringExtra(CartEditor.EXTRA_LINE_ID);
         if (getIntent().hasExtra(SpecialDetailActivity.EXTRA_LOCKED_SIZE_CM)) {
             lockedSizeCm = getIntent().getIntExtra(SpecialDetailActivity.EXTRA_LOCKED_SIZE_CM, 0);
         }
@@ -91,7 +96,21 @@ public class PizzaDetailActivity extends BaseActivity {
         btnAdd.setOnClickListener(v -> addToCart());
 
         btnAdd.setEnabled(false);
-        load(lockedSizeCm);
+        Cart.Line line = editId == null ? null : Cart.get().find(editId);
+        if (editId != null && line == null) {
+            tvError.setText("This item is no longer in your cart. Go back to add it again.");
+            Ui.show(progress, false); Ui.show(errorGroup, true); Ui.show(findViewById(R.id.btnRetry), false); return;
+        }
+        if (savedInstanceState != null && savedInstanceState.containsKey("draft")) {
+            initial = new Gson().fromJson(savedInstanceState.getString("draft"), Models.OrderItemRequest.class);
+            qty = savedInstanceState.getInt("quantity", 1); changed = savedInstanceState.getBoolean("changed");
+        } else if (line != null) { initial = line.request.copyWithQuantity(1); qty = line.quantity; }
+        else if (!getIntent().getBooleanExtra(CartEditor.EXTRA_USE_DEFAULTS, false)) {
+            initial = new Gson().fromJson(getIntent().getStringExtra(CartEditor.EXTRA_INITIAL_REQUEST), Models.OrderItemRequest.class);
+        }
+        if (initial != null) etNotes.setText(initial.notes);
+        if (getIntent().getBooleanExtra(SpecialDetailActivity.EXTRA_CONFIGURE_FOR_SPECIAL, false)) tvQty.setVisibility(View.GONE);
+        load(lockedSizeCm != null ? lockedSizeCm : initial == null ? null : initial.sizeCm);
     }
 
     // ------------------------------------------------------------------ loading
@@ -107,13 +126,25 @@ public class PizzaDetailActivity extends BaseActivity {
             @Override public void onSuccess(Models.PizzaDetail d) {
                 if (dead() || generation != loadGeneration) return;
                 refreshing = false;
+                if (d == null) {
+                    tvError.setText("That pizza is no longer available. Choose another from the menu.");
+                    Ui.show(progress, false); Ui.show(content, false); Ui.show(errorGroup, true); btnAdd.setEnabled(false); return;
+                }
                 detail = d;
-                selection.apply(d, size);
+                Integer actualSize = size;
+                if (size != null && Models.nz(d.availableSizes).stream().noneMatch(v -> v.sizeCm == size)) {
+                    actualSize = null; changed = true;
+                }
+                selection.apply(d, actualSize);
+                if (initial != null) { changed |= selection.restore(initial); initial = null; }
                 render();
             }
             @Override public void onError(String message, int code) {
                 if (dead() || generation != loadGeneration) return;
                 refreshing = false;
+                if (detail == null && size != null && (code == 400 || code == 404)) {
+                    changed = true; load(null); return;
+                }
                 if (detail == null) {
                     Ui.show(progress, false);
                     tvError.setText(message);
@@ -130,6 +161,9 @@ public class PizzaDetailActivity extends BaseActivity {
     private void render() {
         final Models.PizzaDetail d = detail;
         toolbar.setTitle(d.name);
+        ((TextView) findViewById(R.id.tvBasePrice)).setText(Money.rand(d.basePriceForSelectedSize));
+        TextView notice = findViewById(R.id.tvNotice);
+        notice.setText("Some saved choices have changed. Please review your options before saving."); Ui.show(notice, changed);
 
         Ui.show(tvIncludes, false);
 
@@ -217,13 +251,19 @@ public class PizzaDetailActivity extends BaseActivity {
 
     private void updateBar() {
         tvQty.setText(String.valueOf(qty));
-        btnAdd.setText(refreshing ? "Updating prices…" : "Add to cart · " + Money.rand(unitPrice() * qty));
+        String action = getIntent().getBooleanExtra(SpecialDetailActivity.EXTRA_CONFIGURE_FOR_SPECIAL, false) ? "Save choices"
+                : editId == null ? "Add to cart" : "Update cart";
+        btnAdd.setText(adding ? "Checking price…" : refreshing ? "Updating prices…" : action + " · " + Money.rand(unitPrice() * qty));
+        findViewById(R.id.btnMinus).setEnabled(qty > 1 && !adding && !refreshing);
+        findViewById(R.id.btnPlus).setEnabled(qty < 50 && !adding && !refreshing);
+        etNotes.setEnabled(!adding);
+        if (adding) Ui.enableInputs(content, false);
         btnAdd.setEnabled(detail != null && selection.sizeCm() != null && !refreshing && !adding);
     }
 
     // ------------------------------------------------------------------ add to cart
     private void addToCart() {
-        if (detail == null || selection.sizeCm() == null) return;
+        if (detail == null || selection.sizeCm() == null || adding || refreshing) return;
         adding = true;
         updateBar();
         Models.QuoteRequest q = selection.quoteRequest();
@@ -234,9 +274,18 @@ public class PizzaDetailActivity extends BaseActivity {
             }
             @Override public void onError(String message, int code) {
                 if (dead()) return;
-                complete(null);   // fall back to the local estimate
+                adding = false;
+                if (code == 0) complete(null);
+                else { Ui.toast(PizzaDetailActivity.this, message); render(); }
             }
         });
+    }
+
+    @Override protected void onSaveInstanceState(Bundle out) {
+        if (detail != null) out.putString("draft", new Gson().toJson(selection.orderItem(pizzaId, Ui.text(etNotes))));
+        else if (initial != null) out.putString("draft", new Gson().toJson(initial));
+        out.putInt("quantity", qty); out.putBoolean("changed", changed);
+        super.onSaveInstanceState(out);
     }
 
     private void complete(Double quoted) {
@@ -264,8 +313,9 @@ public class PizzaDetailActivity extends BaseActivity {
             result.putExtra(SpecialDetailActivity.EXTRA_CONFIGURED_PRICE, price);
             setResult(RESULT_OK, result);
         } else {
-            Cart.get().add(new Cart.Line(detail.name, String.join(" · ", parts), price, qty, req));
-            Ui.toast(this, "Added to cart");
+            if (!CartEditor.save(this, editId, new Cart.Line(detail.name, String.join(" · ", parts), price, qty, req))) {
+                adding = false; render(); return;
+            }
         }
         finish();
     }

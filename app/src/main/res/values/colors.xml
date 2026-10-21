@@ -8,8 +8,8 @@
     <color name="white">#FFFFFF</color>
     <color name="paper">#F6F7F8</color>
     <color name="paper_variant">#E9ECEE</color>
-    <color name="terracotta_soft">#FCE3DE</color>
+    <color name="terracotta_soft">#FFF1ED</color>
     <color name="steel_blue_soft">#DDEBF7</color>
-    <color name="outline">#7D8589</color>
+    <color name="outline">#606B72</color>
     <color name="error_red">#B3261E</color>
 </resources>

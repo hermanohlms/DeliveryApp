@@ -91,7 +91,7 @@ public class CheckoutActivity extends BaseActivity {
         chipPayFast.setOnCheckedChangeListener((b, checked) -> updateTotal());
         if (!BuildConfig.PAYFAST_ENABLED) {
             chipCash.setChecked(true);
-            Ui.show(findViewById(R.id.paymentGroup), false);
+            Ui.show(chipPayFast, false);
         }
 
         // pre-fill from the saved profile
@@ -121,12 +121,17 @@ public class CheckoutActivity extends BaseActivity {
             row.addView(name);
             row.addView(price);
             box.addView(row);
+            String notes = CartEditor.notes(l);
+            String details = (l.detail == null ? "" : l.detail) + (notes == null || notes.isBlank() ? "" : "\nNote: " + notes);
+            if (!details.isBlank()) {
+                TextView detail = Ui.sectionHint(this, details); box.addView(detail);
+            }
         }
         LinearLayout total = new LinearLayout(this);
         total.setOrientation(LinearLayout.HORIZONTAL);
         total.setPadding(0, Ui.dp(this, 8), 0, 0);
         TextView label = new TextView(this);
-        label.setText("Estimated total");
+        label.setText("Estimated item subtotal");
         label.setTypeface(label.getTypeface(), android.graphics.Typeface.BOLD);
         label.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
         TextView value = new TextView(this);
@@ -141,9 +146,10 @@ public class CheckoutActivity extends BaseActivity {
 
     private void updateTotal() {
         chipCash.setText(chipDelivery.isChecked() ? "Cash on delivery" : "Pay at the counter");
+        ((TextView)findViewById(R.id.tvCheckoutSubtotal)).setText(Money.rand(Cart.get().total()));
         tvPriceNote.setText(payOnline()
-                ? "PayFast shows the exact amount (including any delivery charge) before you pay."
-                : "The restaurant confirms the final price (including any delivery charge) when it accepts your order.");
+                ? (chipDelivery.isChecked() ? "Delivery charge is not included above. " : "") + "PayFast confirms the exact total before payment."
+                : (chipDelivery.isChecked() ? "Delivery charge is not included above. The restaurant confirms it when accepting your order." : "Pickup from " + Prefs.get().getBranch().displayName + ". The restaurant confirms your final total."));
         btnPlace.setText((payOnline() ? "Pay with PayFast · " : "Place order · ") + Money.rand(Cart.get().total()));
     }
 
@@ -326,6 +332,7 @@ public class CheckoutActivity extends BaseActivity {
         i.putExtra(ConfirmationActivity.EXTRA_TYPE, pending.req.orderType);
         i.putExtra(ConfirmationActivity.EXTRA_BRANCH, pending.branch.displayName);
         i.putExtra(ConfirmationActivity.EXTRA_PAYMENT, payment);
+        i.putExtra(ConfirmationActivity.EXTRA_STATUS, r.status);
         startActivity(i);
         finish();
     }
