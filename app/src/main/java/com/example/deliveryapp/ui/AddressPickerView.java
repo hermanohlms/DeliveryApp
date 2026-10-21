@@ -48,6 +48,7 @@ public class AddressPickerView extends LinearLayout {
     private String errorText;
     private String infoText;
     private int requestVersion;
+    private long userEditVersion;
 
     public AddressPickerView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -66,6 +67,7 @@ public class AddressPickerView extends LinearLayout {
                 if (settingText) return;
                 boolean had = selection != null;
                 requestVersion++;
+                userEditVersion++;
                 selection = null;
                 errorText = null;
                 infoText = null;
@@ -83,18 +85,33 @@ public class AddressPickerView extends LinearLayout {
 
     public boolean isVerified() { return selection != null && selection.isVerified(); }
 
+    public long getUserEditVersion() { return userEditVersion; }
+
     /** Pre-fill (e.g. from the saved profile) without starting a search. */
     public void setSelection(Models.AddressSelection s) {
         requestVersion++;
         if (pendingSearch != null) handler.removeCallbacks(pendingSearch);
         selection = s;
         settingText = true;
-        input.setText(s == null || s.formattedAddress == null ? "" : s.formattedAddress);
+        input.setText(displayAddress(s));
         settingText = false;
         suggestions.removeAllViews();
         errorText = null;
         infoText = null;
         updateStatus();
+    }
+
+    private static String displayAddress(Models.AddressSelection address) {
+        if (address == null) return "";
+        if (address.formattedAddress != null && !address.formattedAddress.isBlank()) return address.formattedAddress;
+        StringBuilder text = new StringBuilder();
+        for (String part : new String[]{address.houseNumber, address.street, address.area,
+                address.city, address.postalCode}) {
+            if (part == null || part.isBlank()) continue;
+            if (text.length() > 0) text.append(", ");
+            text.append(part.trim());
+        }
+        return text.toString();
     }
 
     public void setHint(String hint) {

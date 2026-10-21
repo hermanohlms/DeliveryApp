@@ -48,6 +48,9 @@ public class OrderingJourneyTest {
     private String submittedKey;
     private List<Models.MenuItem> menu;
     private Models.Special special;
+    private Models.Profile serverProfile;
+    private boolean deferProfile;
+    private volatile Runnable pendingProfileReply;
 
     @Before public void setup() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -74,7 +77,8 @@ public class OrderingJourneyTest {
         duplicate.defaultSelected=false;duplicate.price=14.0;
         menu.get(0).burgerToppings=new ArrayList<>(menu.get(0).burgerToppings);menu.get(0).burgerToppings.add(duplicate);
         special = special();
-        Api fake = (Api)Proxy.newProxyInstance(Api.class.getClassLoader(),new Class[]{Api.class},(proxy,method,args) -> new FixtureCall(response(method.getName(),args)));
+        Api fake = (Api)Proxy.newProxyInstance(Api.class.getClassLoader(),new Class[]{Api.class},(proxy,method,args) ->
+                new FixtureCall(response(method.getName(),args),deferProfile && "me".equals(method.getName())));
         InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
             try { apiField.set(Repo.get(),fake); ((Map<?,?>)memoryField.get(Repo.get())).clear(); } catch(Exception e) { throw new RuntimeException(e); }
             Cart.get().clear();
@@ -199,11 +203,32 @@ public class OrderingJourneyTest {
         onView(withId(R.id.btnCheckout)).perform(click());
         onView(withId(R.id.chipPickup)).perform(scrollTo(),click());
         onView(withId(R.id.tvCheckoutSubtotal)).check(matches(withText("R69.00")));
+        onView(withId(R.id.etPhone)).perform(scrollTo(),replaceText("0839990000"),closeSoftKeyboard());
         capture("checkout");onView(withId(R.id.btnPlace)).perform(click());
         onView(withId(R.id.tvOrderId)).check(matches(withText("Order #777")));
+        assertEquals("0821234567",Prefs.get().getProfile().phone);
         assertEquals(1,submitted);assertNotNull(submittedKey);assertTrue(Cart.get().isEmpty());capture("confirmation");
         onView(withId(R.id.btnTrack)).perform(scrollTo(),click());
         onView(withId(R.id.tvStatus)).check(matches(withText("Preparing")));capture("tracking");
+    }
+
+    @Test public void checkoutLoadsAccountDetailsWithoutOverwritingAnEditedField() {
+        serverProfile=DemoData.profile();
+        serverProfile.firstName="Server";
+        serverProfile.lastName="Customer";
+        serverProfile.phone="0835551234";
+        serverProfile.address=serverProfile.address.copy();
+        serverProfile.address.formattedAddress="20 Kenridge Ave, Cape Town";
+        deferProfile=true;
+        scenario=ActivityScenario.launch(CheckoutActivity.class);
+        onView(withId(R.id.etName)).check(matches(withText("Demo Customer")));
+        onView(withId(R.id.etName)).perform(scrollTo(),replaceText("Order Guest"),closeSoftKeyboard());
+        assertNotNull(pendingProfileReply);
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(pendingProfileReply);
+        onView(withId(R.id.etName)).check(matches(withText("Order Guest")));
+        onView(withId(R.id.etPhone)).check(matches(withText("0835551234")));
+        onView(withId(R.id.addrInput)).check(matches(withText("20 Kenridge Ave, Cape Town")));
+        assertEquals("Server",Prefs.get().getProfile().firstName);
     }
 
     @Test public void failedCatalogShowsRetryAndRemovedCartLineCannotBeSaved() throws Exception {
@@ -265,20 +290,20 @@ public class OrderingJourneyTest {
                     unit+=quote(choice.item.pizzaId,CheckoutCatalogValidator.pizzaQuote(detail,choice.item)).total-detail.basePriceForSelectedSize;
                 }
                 Models.SpecialQuote q=new Models.SpecialQuote();q.lineTotal=unit*bundle.quantity;return q;
-            case "me":return DemoData.profile();
+            case "me":return serverProfile != null ? serverProfile : DemoData.profile();
             case "myOrders":return List.of();
             case "placeOrder": submitted++;submittedKey=(String)args[0];Models.OrderResponse order=new Models.OrderResponse();order.id=777;order.status="Pending";return order;
             case "tracking":Models.Tracking t=new Models.Tracking();t.orderId=777;t.status="Preparing";t.orderType="pickup";t.etaMinutes=10;t.branch=new Models.MapPoint();t.branch.name="Kenridge";t.branch.formattedAddress="Kenridge restaurant";return t;
             default:throw new AssertionError("Unexpected API call: "+method);
         }
     }
-    private static final class FixtureCall implements Call<Object> {
-        private final Object value;private boolean executed,cancelled;
-        FixtureCall(Object value){this.value=value;}
+    private final class FixtureCall implements Call<Object> {
+        private final Object value;private final boolean deferred;private boolean executed,cancelled;
+        FixtureCall(Object value,boolean deferred){this.value=value;this.deferred=deferred;}
         public Response<Object> execute(){executed=true;return Response.success(value);}
-        public void enqueue(Callback<Object> cb){executed=true;new Handler(Looper.getMainLooper()).post(() -> {if(!cancelled){if(value instanceof IOException)cb.onFailure(this,(IOException)value);else cb.onResponse(this,Response.success(value));}});}
+        public void enqueue(Callback<Object> cb){executed=true;Runnable reply=() -> {if(!cancelled){if(value instanceof IOException)cb.onFailure(this,(IOException)value);else cb.onResponse(this,Response.success(value));}};if(deferred)pendingProfileReply=reply;else new Handler(Looper.getMainLooper()).post(reply);}
         public boolean isExecuted(){return executed;}public void cancel(){cancelled=true;}public boolean isCanceled(){return cancelled;}
-        public Call<Object> clone(){return new FixtureCall(value);}public Request request(){return new Request.Builder().url("https://test.invalid/").build();}
+        public Call<Object> clone(){return new FixtureCall(value,deferred);}public Request request(){return new Request.Builder().url("https://test.invalid/").build();}
         public Timeout timeout(){return new Timeout();}
     }
 }

@@ -36,7 +36,7 @@ public final class Models {
         public String message;
     }
 
-    /** NEW endpoint the backend still needs: POST /api/auth/register */
+    /** Customer signup request for POST /api/auth/register. */
     public static class RegisterRequest {
         public String firstName;
         public String lastName;
@@ -48,7 +48,7 @@ public final class Models {
         public AddressSelection address;
     }
 
-    /** NEW endpoint the backend still needs: GET/PUT /api/me */
+    /** Customer details returned by GET /api/me and cached for checkout. */
     public static class Profile {
         public String firstName;
         public String lastName;
@@ -310,7 +310,9 @@ public final class Models {
         /** Same rule as the backend's AddressSelection.isVerifiedGoogleAddress(). */
         public boolean isVerified() {
             return has(googlePlaceId) && has(formattedAddress) && latitude != null && longitude != null
-                    && has(street) && (has(area) || has(city));
+                    && Double.isFinite(latitude) && latitude >= -90 && latitude <= 90
+                    && Double.isFinite(longitude) && longitude >= -180 && longitude <= 180
+                    && has(street) && (has(area) || has(city)) && has(country);
         }
 
         public AddressSelection copy() {

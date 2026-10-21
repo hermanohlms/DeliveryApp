@@ -100,10 +100,36 @@ public class CheckoutActivity extends BaseActivity {
         etPhone.setText(p.phone);
         etComplex.setText(p.complexName != null ? p.complexName : p.address != null ? p.address.complexName : null);
         address.setSelection(p.address);
+        loadAccountProfile();
 
         buildSummary();
         updateTotal();
         btnPlace.setOnClickListener(v -> place());
+    }
+
+    private void loadAccountProfile() {
+        final String account = Prefs.get().getUsername();
+        final String initialName = Ui.text(etName);
+        final String initialPhone = Ui.text(etPhone);
+        final String initialComplex = Ui.text(etComplex);
+        final long initialAddressEdit = address.getUserEditVersion();
+        Repo.get().me(new Repo.Result<Models.Profile>() {
+            @Override public void onSuccess(Models.Profile profile) {
+                if (dead() || profile == null || !Prefs.get().isLoggedIn()
+                        || !account.equalsIgnoreCase(Prefs.get().getUsername())) return;
+                Prefs.get().saveProfile(profile);
+                if (Ui.text(etName).equals(initialName)) etName.setText(profile.fullName());
+                if (Ui.text(etPhone).equals(initialPhone)) etPhone.setText(profile.phone);
+                if (Ui.text(etComplex).equals(initialComplex)) {
+                    etComplex.setText(profile.complexName != null ? profile.complexName
+                            : profile.address != null ? profile.address.complexName : null);
+                }
+                if (address.getUserEditVersion() == initialAddressEdit) address.setSelection(profile.address);
+            }
+            @Override public void onError(String message, int code) {
+                // Keep the account-scoped local profile if the request fails.
+            }
+        });
     }
 
     private void buildSummary() {
@@ -323,7 +349,6 @@ public class CheckoutActivity extends BaseActivity {
             past.lines.add(l.quantity + "× " + l.name + (l.detail.isEmpty() ? "" : " (" + l.detail + ")"));
         }
         Prefs.get().addOrder(past);
-        rememberDetails(pending.req, pending.delivery);
         Cart.get().clear();
         lastKey = null;
 
@@ -337,17 +362,4 @@ public class CheckoutActivity extends BaseActivity {
         finish();
     }
 
-    /** Save name/phone/address so next checkout is pre-filled (kept on the phone). */
-    private void rememberDetails(Models.OrderRequest req, boolean delivery) {
-        Models.Profile p = Prefs.get().getProfile();
-        if (p.firstName == null || p.firstName.isEmpty()) {
-            String[] parts = req.customerName.split("\\s+", 2);
-            p.firstName = parts[0];
-            p.lastName = parts.length > 1 ? parts[1] : "";
-        }
-        p.phone = req.phone;
-        p.complexName = req.complexName;
-        if (delivery) p.address = req.deliveryAddress;
-        Prefs.get().saveProfile(p);
-    }
 }
