@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.DeliveryApp" parent="Theme.Material3.Dark.NoActionBar">
         <item name="materialButtonStyle">@style/Widget.App.PrimaryButton</item>
         <item name="materialButtonOutlinedStyle">@style/Widget.App.SecondaryButton</item>
@@ -23,6 +23,6 @@
         <item name="android:statusBarColor">@color/brand_blue_dark</item>
         <item name="android:navigationBarColor">@color/neutral_dark</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
     </style>
 </resources>
