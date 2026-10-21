@@ -45,12 +45,15 @@ public final class Prefs {
             edit.putString("profile_owner", username.toLowerCase(Locale.ROOT));
         }
         edit.putString("token", a.accessToken).putString("username", username)
-                .putLong("expires", expires).apply();
+                .putLong("expires", expires).putString("account_role", AccountRole.from(a.roles).name())
+                .putBoolean("driver_start_pending", AccountRole.from(a.roles) == AccountRole.DRIVER)
+                .putBoolean("driver_end_pending", false).apply();
     }
 
     public void clearSession() {
         sp.edit().remove("token").remove("username").remove("expires")
-                .remove("profile").remove("profile_owner").apply();
+                .remove("profile").remove("profile_owner").remove("account_role")
+                .remove("driver_start_pending").remove("driver_end_pending").apply();
     }
 
     /** null when logged out or the token has expired */
@@ -63,6 +66,17 @@ public final class Prefs {
     }
 
     public boolean isLoggedIn() { return getToken() != null; }
+
+    public AccountRole getRole() {
+        if (!isLoggedIn()) return AccountRole.UNKNOWN;
+        try { return AccountRole.valueOf(sp.getString("account_role", "UNKNOWN")); }
+        catch (IllegalArgumentException e) { return AccountRole.UNKNOWN; }
+    }
+
+    public boolean driverStartPending() { return sp.getBoolean("driver_start_pending", false); }
+    public void driverStarted() { sp.edit().putBoolean("driver_start_pending", false).apply(); }
+    public boolean driverEndPending() { return sp.getBoolean("driver_end_pending", false); }
+    public void driverEnding() { sp.edit().putBoolean("driver_end_pending", true).apply(); }
 
     public String getUsername() { return sp.getString("username", ""); }
 

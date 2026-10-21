@@ -33,6 +33,7 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // A restored protected tab must not be created before a guest session is configured.
         super.onCreate(Prefs.get().isLoggedIn() ? savedInstanceState : null);
+        if (SessionRouter.redirectNonCustomer(this)) return;
         setContentView(R.layout.activity_main);
 
         tvBranch = findViewById(R.id.tvBranch);
@@ -137,6 +138,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        if (dead()) return;
         configureSession();
         selectTab(bottomNav.getSelectedItemId());
         Cart.get().addListener(cartListener);

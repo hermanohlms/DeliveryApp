@@ -15,7 +15,6 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
-import java.util.Locale;
 
 public class LoginActivity extends BaseActivity {
     private TextInputEditText etEmail, etPassword;
@@ -56,11 +55,7 @@ public class LoginActivity extends BaseActivity {
     }
 
     private void openLanding() {
-        Intent i = new Intent(this, LandingActivity.class);
-        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(i);
-        finish();
+        SessionRouter.open(this);
     }
 
     private void message(String text, boolean error) {
@@ -82,13 +77,10 @@ public class LoginActivity extends BaseActivity {
         Repo.get().login(email, password, new Repo.Result<Models.AuthResponse>() {
             @Override public void onSuccess(Models.AuthResponse auth) {
                 if (dead()) return;
-                boolean customer = auth.roles == null || auth.roles.isEmpty();
-                if (!customer) {
-                    for (String r : auth.roles) if (r != null && r.toUpperCase(Locale.ROOT).contains("USER")) customer = true;
-                }
-                if (!customer) {
+                if (auth == null || com.example.deliveryapp.data.AccountRole.from(auth.roles)
+                        == com.example.deliveryapp.data.AccountRole.UNKNOWN) {
                     reset();
-                    message("This app is for customer accounts. Staff, please use the staff site.", true);
+                    message("Your account has no supported access role. Please contact your manager.", true);
                     return;
                 }
                 Prefs.get().saveSession(auth, email);

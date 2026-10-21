@@ -150,7 +150,7 @@ public final class Repo implements CatalogClient {
             case 400: return server != null ? server : "The restaurant couldn't accept that. Please check your details and try again.";
             case 401: return authCall ? "Incorrect email or password." : "Your session expired. Please log in again.";
             case 403: return "This account isn't allowed to do that.";
-            case 404: return "That item is no longer available.";
+            case 404: return "driver".equals(context) ? (server != null ? server : "No delivery is available right now.") : "That item is no longer available.";
             case 409: return server != null ? server : "That conflicts with an existing record.";
             case 429: return "Too many attempts. Please wait a minute and try again.";
             default: return "Something went wrong on the server (" + code + ").";
@@ -194,6 +194,13 @@ public final class Repo implements CatalogClient {
     }
 
     // ------------------------------------------------------------------ menu
+    public void driverDashboard(Result<DriverModels.Dashboard> cb) { run(api.driverDashboard(), "driver", cb); }
+    public void driverClockIn(Result<DriverModels.Shift> cb) { run(api.driverClockIn(), "driver", cb); }
+    public void driverClockOut(Result<DriverModels.Shift> cb) { run(api.driverClockOut(), "driver", cb); }
+    public void driverClaim(Result<DriverModels.Dashboard> cb) { run(api.driverClaim(), "driver", cb); }
+    public void driverPickup(long id, Result<DriverModels.Dashboard> cb) { run(api.driverPickup(id), "driver", cb); }
+    public void driverDelivered(long id, Result<DriverModels.Dashboard> cb) { run(api.driverDelivered(id), "driver", cb); }
+
     public void pizzas(int branchId, Result<Models.PizzaCategorySplit> cb) {
         final String key = "pizzas:" + branchId;
         run(api.pizzas(branchId), "pizzas", new Result<Models.PizzaCategorySplit>() {

@@ -20,6 +20,7 @@ public class LandingActivity extends BaseActivity {
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
+        if (SessionRouter.redirectNonCustomer(this)) return;
         setContentView(R.layout.activity_landing);
         branchChoiceOpen = state != null && state.getBoolean("branch_choice_open");
         findViewById(R.id.btnViewMenu).setOnClickListener(v -> {
@@ -43,6 +44,7 @@ public class LandingActivity extends BaseActivity {
 
     @Override protected void onResume() {
         super.onResume();
+        if (dead() || SessionRouter.redirectNonCustomer(this)) return;
         updateAccountActions();
     }
 

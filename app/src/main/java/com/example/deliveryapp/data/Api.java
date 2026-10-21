@@ -14,6 +14,12 @@ import retrofit2.http.Query;
 
 /** Mirrors the Spring Boot controllers. Endpoints marked NEW do not exist on the backend yet. */
 public interface Api {
+    @GET("api/driver") Call<DriverModels.Dashboard> driverDashboard();
+    @POST("api/driver/clock-in") Call<DriverModels.Shift> driverClockIn();
+    @POST("api/driver/clock-out") Call<DriverModels.Shift> driverClockOut();
+    @POST("api/driver/claim") Call<DriverModels.Dashboard> driverClaim();
+    @POST("api/driver/orders/{id}/pickup") Call<DriverModels.Dashboard> driverPickup(@Path("id") long id);
+    @POST("api/driver/orders/{id}/delivered") Call<DriverModels.Dashboard> driverDelivered(@Path("id") long id);
     @POST("api/auth/login")
     Call<Models.AuthResponse> login(@Body Models.LoginRequest body);
 

@@ -36,6 +36,10 @@ import static org.junit.Assert.*;
 public class OrderingJourneyTest {
     private final Gson gson = new Gson();
     private Api originalApi;
+    private DriverModels.Dashboard driverState;
+    private int driverClockIns, driverClockOuts;
+    private boolean driverOffline, loseClockOutReply, rejectClockOut;
+    private String loginRole="ROLE_USER";
     private Map<String, ?> savedPreferences;
     private Map<Integer,List<Models.MenuItem>> savedMemory;
     private final Map<String,List<ContentValues>> savedTables = new HashMap<>();
@@ -82,7 +86,7 @@ public class OrderingJourneyTest {
         InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
             try { apiField.set(Repo.get(),fake); ((Map<?,?>)memoryField.get(Repo.get())).clear(); } catch(Exception e) { throw new RuntimeException(e); }
             Cart.get().clear();
-            Models.AuthResponse auth = new Models.AuthResponse();auth.accessToken="ui-test-only";auth.username="ui-test@example.test";auth.expiresIn=3600;
+            Models.AuthResponse auth = new Models.AuthResponse();auth.accessToken="ui-test-only";auth.username="ui-test@example.test";auth.expiresIn=3600;auth.roles=List.of("ROLE_USER");
             Prefs.get().saveSession(auth,auth.username); Prefs.get().setBranch(Branch.fromId(1)); Prefs.get().saveProfile(DemoData.profile());
         });
     }
@@ -111,6 +115,115 @@ public class OrderingJourneyTest {
                 else if(v instanceof Float)edit.putFloat(k,(Float)v);else if(v instanceof Set)edit.putStringSet(k,(Set<String>)v);
             } edit.commit();
         }
+    }
+
+    private void prepareDriver(String shiftState) {
+        driverState=new DriverModels.Dashboard(); driverState.profile=new DriverModels.Profile();
+        driverState.profile.id=44;driverState.profile.branchId=1;driverState.profile.firstName="Test";
+        driverState.profile.lastName="Driver";driverState.profile.email="driver@example.test";driverState.profile.active=true;
+        if(shiftState!=null) {
+            driverState.shift=new DriverModels.Shift(); driverState.shift.id=99;driverState.shift.state=shiftState;
+            driverState.shift.clockedInAt=java.time.OffsetDateTime.now().minusHours(1).toString();
+            driverState.shift.hourlyRate=60;driverState.shift.perDeliveryRate=10;
+        }
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            Models.AuthResponse auth=new Models.AuthResponse();auth.username="driver@example.test";
+            auth.accessToken="fixture-driver-only";auth.expiresIn=3600;auth.roles=List.of("ROLE_DRIVER");
+            Prefs.get().saveSession(auth,auth.username);
+        });
+    }
+    @Test public void driverLoginStartsShiftAndDeliveryJourneyRecoversLostClockOut() throws Exception {
+        prepareDriver(null);loginRole="ROLE_DRIVER";
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> Repo.get().logout());
+        scenario=ActivityScenario.launch(LoginActivity.class);
+        onView(withId(R.id.etEmail)).perform(replaceText("driver@example.test"));
+        onView(withId(R.id.etPassword)).perform(replaceText("fixture-only"),closeSoftKeyboard());
+        onView(withId(R.id.btnLogin)).perform(click());
+        onView(withId(R.id.tvDriverName)).check(matches(withText("Test Driver")));
+        assertEquals(1,driverClockIns);recreateCurrent();
+        onView(withId(R.id.btnDriverClaim)).check(matches(isEnabled()));assertEquals(1,driverClockIns);
+        capture("driver-dashboard");
+        onView(withId(R.id.btnDriverClaim)).perform(click());
+        onView(withText("Mark picked up")).perform(scrollTo()).check(matches(not(isEnabled())));
+        onView(withId(R.id.btnDriverEnd)).perform(scrollTo()).check(matches(not(isEnabled())));
+        verifyDriverExternalActions();
+        driverState.deliveries.get(0).order.status="Completed";
+        onView(withId(R.id.btnDriverRetry)).perform(scrollTo(),click());
+        onView(withText("Mark picked up")).perform(scrollTo(),click());
+        capture("driver-picked-up");
+        onView(withText("Mark delivered")).perform(scrollTo(),click());
+        onView(withText("Cancel")).perform(click());assertEquals("PICKED_UP",driverState.deliveries.get(0).state);
+        onView(withText("Mark delivered")).perform(click());
+        onView(allOf(withText("Mark delivered"),isAssignableFrom(android.widget.Button.class),not(isDescendantOfA(withId(R.id.driverActive)))))
+                .perform(click());
+        onView(withId(R.id.btnDriverClaim)).perform(scrollTo()).check(matches(isEnabled()));
+        assertEquals("DELIVERED",driverState.deliveries.get(0).state);
+        loseClockOutReply=true;
+        onView(withId(R.id.btnDriverEnd)).perform(scrollTo(),click());
+        onView(withText("End shift & sign out")).perform(click());
+        onView(withId(R.id.btnViewMenu)).check(matches(isDisplayed()));
+        assertEquals(1,driverClockOuts);assertFalse(Prefs.get().isLoggedIn());
+    }
+    private void verifyDriverExternalActions() {
+        android.app.Instrumentation instrument=InstrumentationRegistry.getInstrumentation();
+        List<android.content.Intent> opened=new ArrayList<>();
+        android.app.Instrumentation.ActivityMonitor monitor=new android.app.Instrumentation.ActivityMonitor() {
+            @Override public android.app.Instrumentation.ActivityResult onStartActivity(android.content.Intent intent) {
+                if(android.content.Intent.ACTION_DIAL.equals(intent.getAction()) || android.content.Intent.ACTION_VIEW.equals(intent.getAction())) {
+                    opened.add(intent);return new android.app.Instrumentation.ActivityResult(Activity.RESULT_CANCELED,null);
+                }
+                return null;
+            }
+        };
+        instrument.addMonitor(monitor);
+        try {
+            onView(withText("Call 0800000000")).perform(scrollTo(),click());
+            onView(withText("Navigate")).perform(scrollTo(),click());
+            assertEquals(2,opened.size());assertEquals("tel:0800000000",opened.get(0).getDataString());
+            assertEquals("12 Test Road, Cape Town",opened.get(1).getData().getQueryParameter("destination"));
+        } finally { instrument.removeMonitor(monitor); }
+    }
+    @Test public void failedClockOutKeepsDriverSignedInUntilServerConfirmsRetry() {
+        prepareDriver("ACTIVE");rejectClockOut=true;scenario=ActivityScenario.launch(DriverActivity.class);
+        onView(withId(R.id.btnDriverEnd)).perform(scrollTo(),click());
+        onView(withText("End shift & sign out")).perform(click());
+        onView(withId(R.id.tvDriverError)).perform(scrollTo()).check(matches(isDisplayed()));
+        assertTrue(Prefs.get().isLoggedIn());assertEquals("ACTIVE",driverState.shift.state);
+        rejectClockOut=false;
+        onView(withId(R.id.btnDriverEnd)).perform(scrollTo(),click());
+        onView(withText("End shift & sign out")).perform(click());
+        onView(withId(R.id.btnViewMenu)).check(matches(isDisplayed()));assertEquals(2,driverClockOuts);
+    }
+    @Test public void driverResumeDoesNotRestartClockedOutShiftAndCustomerCannotOpenDriverArea() {
+        prepareDriver("CLOCKED_OUT");scenario=ActivityScenario.launch(LandingActivity.class);
+        onView(withId(R.id.tvDriverShift)).check(matches(withText("Awaiting manager cash-up")));
+        onView(withId(R.id.btnDriverClaim)).check(matches(not(isEnabled())));assertEquals(0,driverClockIns);
+        scenario.close();
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            Models.AuthResponse auth=DemoData.auth();auth.accessToken="fixture-customer-only";
+            Prefs.get().saveSession(auth,auth.username);
+        });
+        scenario=ActivityScenario.launch(DriverActivity.class);
+        onView(withId(R.id.btnOrder)).check(matches(isDisplayed()));
+    }
+    @Test public void driverOfflineDisablesChangesAndRestoresExistingShift() throws Exception {
+        prepareDriver("ACTIVE");driverOffline=true;scenario=ActivityScenario.launch(DriverActivity.class);
+        onView(withId(R.id.tvDriverError)).check(matches(isDisplayed()));
+        onView(withId(R.id.btnDriverClaim)).check(matches(not(isEnabled())));
+        driverOffline=false;onView(withId(R.id.btnDriverRetry)).perform(click());
+        onView(withId(R.id.btnDriverClaim)).check(matches(isEnabled()));assertEquals(0,driverClockIns);
+        capture("driver-reconnected");
+        recreateCurrent();onView(withId(R.id.btnDriverClaim)).check(matches(isEnabled()));assertEquals(0,driverClockIns);
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> preferences.edit().putLong("expires",1).commit());
+        recreateCurrent();onView(withId(R.id.btnViewMenu)).check(matches(isDisplayed()));assertEquals(0,driverClockOuts);
+    }
+    @Test public void managerRoleOpensStaffSiteMessageEvenWithCustomerAuthority() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            Models.AuthResponse a=DemoData.auth();a.accessToken="fixture-manager-only";
+            a.roles=List.of("ROLE_USER","ROLE_ADMIN","ROLE_SUPER_ADMIN");Prefs.get().saveSession(a,a.username);
+        });
+        scenario=ActivityScenario.launch(LandingActivity.class);
+        onView(withText("Manager and admin accounts use the staff web app.")).check(matches(isDisplayed()));
     }
 
     @Test public void burgerGroupingEditCancelSaveAndRotation() throws Exception {
@@ -278,6 +391,21 @@ public class OrderingJourneyTest {
     }
     private Object response(String method,Object[] args) {
         switch(method) {
+            case "login":Models.AuthResponse login=DemoData.auth();login.accessToken="fixture-login-only";login.roles=List.of(loginRole);login.username="driver@example.test";return login;
+            case "driverDashboard":return driverOffline ? new IOException("Fixture offline") : driverState;
+            case "driverClockIn":driverClockIns++;driverState.shift=new DriverModels.Shift();driverState.shift.id=99;
+                driverState.shift.state="ACTIVE";driverState.shift.clockedInAt=java.time.OffsetDateTime.now().toString();return driverState.shift;
+            case "driverClaim":DriverModels.Delivery delivery=new DriverModels.Delivery();delivery.assignmentId=1;delivery.state="ASSIGNED";
+                delivery.order=new DriverModels.Order();delivery.order.id=123;delivery.order.status="Preparing";
+                delivery.order.customerName="Fixture Customer";delivery.order.formattedAddress="12 Test Road, Cape Town";
+                delivery.order.phone="0800000000";delivery.order.gateAccessCode="fixture";delivery.order.notes="Ring bell";
+                driverState.deliveries.add(delivery);return driverState;
+            case "driverPickup":driverState.deliveries.get(0).state="PICKED_UP";return driverState;
+            case "driverDelivered":driverState.deliveries.get(0).state="DELIVERED";return driverState;
+            case "driverClockOut":driverClockOuts++;if(rejectClockOut)return new IOException("Clock-out failed before commit");
+                driverState.shift.state="CLOCKED_OUT";
+                driverState.shift.clockedOutAt=java.time.OffsetDateTime.now().toString();
+                return loseClockOutReply ? new IOException("Reply lost after commit") : driverState.shift;
             case "menuItems":return failMenu ? new IOException("Fixture offline") : menu;
             case "pizzas":return DemoData.pizzas();
             case "pizzaDetail":return DemoData.pizzaDetail((Integer)args[1],(Integer)args[2]);
