@@ -17,11 +17,23 @@ public final class DriverModels {
             for (Delivery d : Models.nz(deliveries)) if (d.unfinished()) return true;
             return false;
         }
-        public int deliveredCount() {
-            int n = 0; for (Delivery d : Models.nz(deliveries)) if ("DELIVERED".equals(d.state)) n++; return n;
+        public List<Delivery> currentDeliveries() {
+            List<Delivery> result = new ArrayList<>();
+            if (shift != null) for (Delivery d : Models.nz(deliveries))
+                if (d.shiftId == shift.id && d.unfinished() && d.order != null) result.add(d);
+            return result;
         }
+        public List<Delivery> completedDeliveries() {
+            List<Delivery> result = new ArrayList<>();
+            if (shift != null) for (Delivery d : Models.nz(deliveries))
+                if (d.shiftId == shift.id && "DELIVERED".equals(d.state) && d.order != null) result.add(d);
+            result.sort(java.util.Comparator.comparingLong((Delivery d) -> timestamp(d.deliveredAt)).reversed()
+                    .thenComparing(java.util.Comparator.comparingLong((Delivery d) -> d.assignmentId).reversed()));
+            return result;
+        }
+        public int deliveredCount() { return completedDeliveries().size(); }
         public double sales() {
-            double sum = 0; for (Delivery d : Models.nz(deliveries)) if ("DELIVERED".equals(d.state)) sum += d.total; return sum;
+            double sum = 0; for (Delivery d : completedDeliveries()) sum += d.total; return sum;
         }
         public double estimatedPay(long now) {
             if (shift == null || timestamp(shift.clockedInAt) == 0) return 0;
@@ -51,7 +63,8 @@ public final class DriverModels {
         public String state, assignedAt, pickedUpAt, deliveredAt;
         public boolean selfClaimed;
         public boolean unfinished() { return "ASSIGNED".equals(state) || "PICKED_UP".equals(state); }
-        public boolean pickupAllowed() { return "ASSIGNED".equals(state) && order != null && "Completed".equals(order.status); }
+        public boolean pickupAllowed() { return "ASSIGNED".equals(state) && order != null
+                && ("Pending".equals(order.status) || "Preparing".equals(order.status) || "Completed".equals(order.status)); }
     }
     public static class Order {
         public long id;

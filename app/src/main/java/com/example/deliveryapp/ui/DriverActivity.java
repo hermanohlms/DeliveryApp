@@ -13,7 +13,6 @@ import com.example.deliveryapp.R;
 import com.example.deliveryapp.data.*;
 import com.example.deliveryapp.util.Money;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -31,8 +30,8 @@ public class DriverActivity extends BaseActivity {
     private long lastRefresh;
     private DriverModels.Dashboard dashboard;
     private TextView name, branch, shift, summary, connection, error;
-    private MaterialButton claim, end, retry;
-    private LinearLayout active, completed;
+    private MaterialButton claim, end, retry, history;
+    private LinearLayout active;
     private String message = "";
 
     @Override protected void onCreate(Bundle state) {
@@ -43,7 +42,12 @@ public class DriverActivity extends BaseActivity {
         shift=findViewById(R.id.tvDriverShift); summary=findViewById(R.id.tvDriverSummary);
         connection=findViewById(R.id.tvDriverConnection); error=findViewById(R.id.tvDriverError);
         claim=findViewById(R.id.btnDriverClaim); end=findViewById(R.id.btnDriverEnd); retry=findViewById(R.id.btnDriverRetry);
-        active=findViewById(R.id.driverActive); completed=findViewById(R.id.driverCompleted);
+        active=findViewById(R.id.driverActive); history=findViewById(R.id.btnDriverHistory);
+        history.setOnClickListener(v -> {
+            if (usable() && dashboard != null && dashboard.shift != null)
+                startActivity(new Intent(this, DriverHistoryActivity.class)
+                        .putExtra(DriverHistoryActivity.EXTRA_SHIFT_ID, dashboard.shift.id));
+        });
         retry.setOnClickListener(v -> { mayStart=true; refresh(false); });
         claim.setOnClickListener(v -> {
             if (!canAct() || dashboard.hasUnfinished()) return;
@@ -154,7 +158,9 @@ public class DriverActivity extends BaseActivity {
         error.setText(message); error.setVisibility(message.isEmpty()?View.GONE:View.VISIBLE);
         claim.setEnabled(canAct() && !dashboard.hasUnfinished());
         end.setEnabled(!busy && fresh && dashboard!=null && !dashboard.hasUnfinished());
-        active.removeAllViews(); completed.removeAllViews();
+        history.setEnabled(!busy && dashboard!=null && dashboard.shift!=null);
+        history.setText("View shift history ("+(dashboard==null?0:dashboard.deliveredCount())+")");
+        active.removeAllViews();
         if (dashboard==null) return;
         DriverModels.Profile p=dashboard.profile;
         String fullName=(safe(p.firstName)+" "+safe(p.lastName)).trim();
@@ -173,39 +179,23 @@ public class DriverActivity extends BaseActivity {
                 +"\nEstimated pay: "+Money.rand(dashboard.estimatedPay(System.currentTimeMillis()))
                 +"\nFinal pay is confirmed during manager cash-up.");
         end.setText(s!=null && s.active() ? "End shift & sign out" : "Sign out");
-        for (DriverModels.Delivery d:Models.nz(dashboard.deliveries)) {
-            if (d.order==null || "CANCELLED".equals(d.state)) continue;
-            card(d,d.unfinished()?active:completed);
-        }
-        if (active.getChildCount()==0) text(active,"No active deliveries. Claim next when you are ready.",16,false);
-        if (completed.getChildCount()==0) text(completed,"Your completed deliveries will appear here.",16,false);
+        for (DriverModels.Delivery d:dashboard.currentDeliveries()) card(d,active);
+        if (active.getChildCount()==0) text(active,"No current delivery. Claim next when you are ready.",16,false);
     }
     private void card(DriverModels.Delivery d,LinearLayout parent) {
         DriverModels.Order o=d.order;
-        MaterialCardView card=new MaterialCardView(this);
-        LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(-1,-2); cp.topMargin=Ui.dp(this,12); card.setLayoutParams(cp);
-        card.setRadius(Ui.dp(this,16)); card.setCardElevation(Ui.dp(this,1));
-        card.setCardBackgroundColor(getColor(R.color.white)); card.setStrokeColor(getColor(R.color.outline));
-        LinearLayout box=new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL);
-        int pad=Ui.dp(this,16); box.setPadding(pad,pad,pad,pad); card.addView(box); parent.addView(card);
-        text(box,"Order #"+o.id+" · "+safe(d.state).replace('_',' '),20,true);
-        text(box,"Kitchen: "+("Completed".equals(o.status)?"Ready for pickup":safe(o.status)),16,false);
-        text(box,safe(o.customerName),18,true); text(box,o.address(),16,false);
-        if (!safe(o.complexName).isEmpty()) text(box,"Unit / complex: "+o.complexName,16,false);
-        if (!safe(o.gateAccessCode).isEmpty()) text(box,"Gate code: "+o.gateAccessCode,16,false);
-        if (!safe(o.notes).isEmpty()) text(box,"Notes: "+o.notes,16,false);
-        text(box,o.contents(),16,false); text(box,"Order total: "+Money.rand(d.total),16,true);
-        if (!safe(o.phone).isEmpty()) button(box,"Call "+o.phone,()->external(new Intent(Intent.ACTION_DIAL,Uri.fromParts("tel",o.phone,null))));
-        if (!o.address().isEmpty() || o.latitude!=null && o.longitude!=null) button(box,"Navigate",()-> {
-            String target=o.latitude!=null && o.longitude!=null ? o.latitude+","+o.longitude : o.address();
-            external(new Intent(Intent.ACTION_VIEW,Uri.parse("https://www.google.com/maps/dir/?api=1&destination="+Uri.encode(target))));
-        });
+        LinearLayout box=DriverOrderViews.addCard(this,parent,d);
         if ("ASSIGNED".equals(d.state)) {
             MaterialButton pickup=button(box,"Mark picked up",()-> {
                 if (!canAct() || !d.pickupAllowed()) return;
-                begin(); Repo.get().driverPickup(o.id,deliveryResult());
+                new MaterialAlertDialogBuilder(this).setTitle("Confirm pickup")
+                        .setMessage("Have you collected order #"+o.id+"?")
+                        .setNegativeButton("Cancel",null).setPositiveButton("Mark picked up",(dialog,which) -> {
+                            if (!canAct() || !d.pickupAllowed()) return;
+                            begin(); Repo.get().driverPickup(o.id,deliveryResult());
+                        }).show();
             }); pickup.setEnabled(canAct() && d.pickupAllowed());
-            if (!d.pickupAllowed()) text(box,"Waiting for the kitchen to complete this order.",14,false);
+            if (!d.pickupAllowed()) text(box,"This order is no longer available for pickup. Refresh or contact your manager.",14,false);
         } else if ("PICKED_UP".equals(d.state)) {
             MaterialButton delivered=button(box,"Mark delivered",()->new MaterialAlertDialogBuilder(this)
                     .setTitle("Confirm delivery").setMessage("Has order #"+o.id+" been handed to the customer?")
@@ -214,6 +204,12 @@ public class DriverActivity extends BaseActivity {
                         begin(); Repo.get().driverDelivered(o.id,deliveryResult());
                     }).show()); delivered.setEnabled(canAct());
         }
+        DriverOrderViews.addDetails(this,box,d);
+        if (!safe(o.phone).isEmpty()) button(box,"Call "+o.phone,()->external(new Intent(Intent.ACTION_DIAL,Uri.fromParts("tel",o.phone,null))));
+        if (!o.address().isEmpty() || o.latitude!=null && o.longitude!=null) button(box,"Navigate",()-> {
+            String target=o.latitude!=null && o.longitude!=null ? o.latitude+","+o.longitude : o.address();
+            external(new Intent(Intent.ACTION_VIEW,Uri.parse("https://www.google.com/maps/dir/?api=1&destination="+Uri.encode(target))));
+        });
     }
     private void text(LinearLayout box,String value,int size,boolean bold) {
         if (value==null || value.isEmpty()) return;

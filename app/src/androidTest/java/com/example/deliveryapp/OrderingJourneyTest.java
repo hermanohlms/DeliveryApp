@@ -38,7 +38,8 @@ public class OrderingJourneyTest {
     private Api originalApi;
     private DriverModels.Dashboard driverState;
     private int driverClockIns, driverClockOuts;
-    private boolean driverOffline, loseClockOutReply, rejectClockOut;
+    private boolean driverOffline, loseClockOutReply, rejectClockOut, losePickupReply, noDriverDelivery;
+    private int driverPickups;
     private String loginRole="ROLE_USER";
     private Map<String, ?> savedPreferences;
     private Map<Integer,List<Models.MenuItem>> savedMemory;
@@ -92,12 +93,17 @@ public class OrderingJourneyTest {
     }
 
     @After public void restore() throws Exception {
-        if (scenario != null) scenario.close();
+        // Finish redirected activities before closing the original scenario. A role/session
+        // redirect can destroy its launch activity while another activity is still starting.
         InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
-            for (Activity a : new ArrayList<>(ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED))) a.finish();
+            Set<Activity> activities=new HashSet<>();
+            for (Stage stage:List.of(Stage.RESUMED,Stage.STARTED,Stage.PAUSED,Stage.STOPPED,Stage.CREATED))
+                activities.addAll(ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(stage));
+            for (Activity activity:activities) if (!activity.isFinishing()) activity.finish();
             Cart.get().clear();
         });
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        if (scenario != null) scenario.close();
         if (originalApi != null) apiField.set(Repo.get(),originalApi);
         if (savedMemory != null) { Map<Integer,List<Models.MenuItem>> memory=(Map<Integer,List<Models.MenuItem>>)memoryField.get(Repo.get());memory.clear();memory.putAll(savedMemory); }
         if (cache != null) {
@@ -144,12 +150,14 @@ public class OrderingJourneyTest {
         onView(withId(R.id.btnDriverClaim)).check(matches(isEnabled()));assertEquals(1,driverClockIns);
         capture("driver-dashboard");
         onView(withId(R.id.btnDriverClaim)).perform(click());
-        onView(withText("Mark picked up")).perform(scrollTo()).check(matches(not(isEnabled())));
+        onView(withText("Mark picked up")).perform(scrollTo()).check(matches(isEnabled()));
         onView(withId(R.id.btnDriverEnd)).perform(scrollTo()).check(matches(not(isEnabled())));
         verifyDriverExternalActions();
-        driverState.deliveries.get(0).order.status="Completed";
-        onView(withId(R.id.btnDriverRetry)).perform(scrollTo(),click());
         onView(withText("Mark picked up")).perform(scrollTo(),click());
+        onView(withText("Cancel")).perform(click()); assertEquals("ASSIGNED",driverState.deliveries.get(0).state);
+        onView(withText("Mark picked up")).perform(scrollTo(),click());
+        onView(withId(android.R.id.button1)).perform(click());
+        assertEquals("Preparing",driverState.deliveries.get(0).order.status);
         capture("driver-picked-up");
         onView(withText("Mark delivered")).perform(scrollTo(),click());
         onView(withText("Cancel")).perform(click());assertEquals("PICKED_UP",driverState.deliveries.get(0).state);
@@ -158,11 +166,90 @@ public class OrderingJourneyTest {
                 .perform(click());
         onView(withId(R.id.btnDriverClaim)).perform(scrollTo()).check(matches(isEnabled()));
         assertEquals("DELIVERED",driverState.deliveries.get(0).state);
+        onView(withText("Order #123 · DELIVERED")).check(doesNotExist());
+        onView(withId(R.id.btnDriverHistory)).perform(scrollTo()).check(matches(withText("View shift history (1)"))).perform(click());
+        onView(withText("Order #123 · DELIVERED")).perform(scrollTo()).check(matches(isDisplayed()));
+        onView(withText("Mark delivered")).check(doesNotExist());
+        capture("driver-shift-history");
+        recreateCurrent(); onView(withText("Order #123 · DELIVERED")).perform(scrollTo()).check(matches(isDisplayed()));
+        pressBack(); onView(withId(R.id.btnDriverClaim)).perform(scrollTo()).check(matches(isEnabled()));
         loseClockOutReply=true;
         onView(withId(R.id.btnDriverEnd)).perform(scrollTo(),click());
         onView(withText("End shift & sign out")).perform(click());
         onView(withId(R.id.btnViewMenu)).check(matches(isDisplayed()));
         assertEquals(1,driverClockOuts);assertFalse(Prefs.get().isLoggedIn());
+    }
+    private DriverModels.Delivery historyDelivery(long id,long shift,String state,String timestamp) {
+        DriverModels.Delivery d=new DriverModels.Delivery(); d.assignmentId=id;d.shiftId=shift;d.state=state;
+        d.order=new DriverModels.Order();d.order.id=id;d.order.customerName="Customer "+id;
+        d.order.status="Preparing";d.order.notes="Door note "+id;d.total=100;
+        d.pickedUpAt=timestamp;d.deliveredAt=timestamp;return d;
+    }
+    @Test public void driverHistoryShowsOnlyThisShiftsCompletionsAndRecoversOffline() throws Exception {
+        prepareDriver("ACTIVE");
+        driverState.deliveries.add(historyDelivery(301,99,"ASSIGNED",null));
+        driverState.deliveries.add(historyDelivery(302,99,"PICKED_UP",null));
+        driverState.deliveries.add(historyDelivery(303,99,"DELIVERED","2026-10-21T17:00:00+02:00"));
+        driverState.deliveries.add(historyDelivery(304,99,"DELIVERED","2026-10-21T18:00:00+02:00"));
+        driverState.deliveries.add(historyDelivery(305,98,"DELIVERED","2026-10-20T18:00:00+02:00"));
+        driverState.deliveries.add(historyDelivery(306,99,"CANCELLED",null));
+        scenario=ActivityScenario.launch(DriverActivity.class);
+        onView(withText("Order #301 · ASSIGNED")).perform(scrollTo()).check(matches(isDisplayed()));
+        onView(withText("Order #302 · PICKED UP")).perform(scrollTo()).check(matches(isDisplayed()));
+        onView(withText("Order #303 · DELIVERED")).check(doesNotExist());
+        onView(withId(R.id.btnDriverHistory)).perform(scrollTo()).check(matches(withText("View shift history (2)"))).perform(click());
+        onView(withText("Order #301 · ASSIGNED")).check(doesNotExist());
+        onView(withText("Order #305 · DELIVERED")).check(doesNotExist());
+        onView(withText("Order #306 · CANCELLED")).check(doesNotExist());
+        onView(withId(R.id.driverHistoryOrders)).check((view,missing) -> {
+            android.widget.LinearLayout list=(android.widget.LinearLayout)view;
+            android.widget.LinearLayout first=(android.widget.LinearLayout)((android.view.ViewGroup)list.getChildAt(0)).getChildAt(0);
+            assertEquals("Order #304 · DELIVERED",((android.widget.TextView)first.getChildAt(0)).getText().toString());
+        });
+        onView(withText("Mark picked up")).check(doesNotExist());
+        onView(withText("Mark delivered")).check(doesNotExist());
+        onView(withText("Notes: Door note 303")).perform(scrollTo()).check(matches(isDisplayed()));
+        driverOffline=true; onView(withId(R.id.btnDriverHistoryRefresh)).perform(scrollTo(),click());
+        onView(withId(R.id.tvDriverHistoryError)).perform(scrollTo()).check(matches(isDisplayed()));
+        driverOffline=false; onView(withId(R.id.btnDriverHistoryRefresh)).perform(click());
+        onView(withId(R.id.tvDriverHistoryError)).check(matches(withEffectiveVisibility(Visibility.GONE)));
+        recreateCurrent();onView(withText("Order #304 · DELIVERED")).perform(scrollTo()).check(matches(isDisplayed()));
+        driverState.shift.id=100;onView(withId(R.id.btnDriverHistoryRefresh)).perform(scrollTo(),click());
+        onView(withText("Order #304 · DELIVERED")).check(doesNotExist());
+        onView(withId(R.id.tvDriverHistoryError)).check(matches(isDisplayed()));
+        assertEquals(0,driverClockIns);assertEquals(0,driverClockOuts);
+    }
+    @Test public void driverHistoryEmptyAndSessionExpiryAndCustomerGuard() {
+        prepareDriver("ACTIVE");scenario=ActivityScenario.launch(DriverActivity.class);
+        onView(withId(R.id.btnDriverHistory)).perform(scrollTo(),click());
+        onView(withText("No completed deliveries this shift yet.")).check(matches(isDisplayed()));
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> preferences.edit().putLong("expires",1).commit());
+        recreateCurrent();onView(withId(R.id.btnViewMenu)).check(matches(isDisplayed()));
+        scenario.close();
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            Models.AuthResponse auth=DemoData.auth();auth.accessToken="fixture-customer-only";Prefs.get().saveSession(auth,auth.username);
+        });
+        Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();
+        scenario=ActivityScenario.launch(new Intent(context,DriverHistoryActivity.class).putExtra(DriverHistoryActivity.EXTRA_SHIFT_ID,99L));
+        onView(withId(R.id.btnOrder)).check(matches(isDisplayed()));
+    }
+    @Test public void driverCanRetryWhenNoDeliveryIsAvailable() {
+        prepareDriver("ACTIVE");noDriverDelivery=true;scenario=ActivityScenario.launch(DriverActivity.class);
+        onView(withId(R.id.btnDriverClaim)).perform(scrollTo(),click());
+        onView(withId(R.id.tvDriverError)).perform(scrollTo()).check(matches(withText("No delivery is available right now.")));
+        onView(withText("No current delivery. Claim next when you are ready.")).perform(scrollTo()).check(matches(isDisplayed()));
+        assertTrue(driverState.deliveries.isEmpty());
+        noDriverDelivery=false;onView(withId(R.id.btnDriverClaim)).perform(scrollTo(),click());
+        onView(withText("Mark picked up")).perform(scrollTo()).check(matches(isEnabled()));
+    }
+    @Test public void driverPickupRecoversLostReplyWithoutSendingItTwice() {
+        prepareDriver("ACTIVE");scenario=ActivityScenario.launch(DriverActivity.class);
+        onView(withId(R.id.btnDriverClaim)).perform(scrollTo(),click());losePickupReply=true;
+        onView(withText("Mark picked up")).perform(scrollTo(),click());
+        onView(withId(android.R.id.button1)).perform(click());
+        onView(withText("Mark delivered")).perform(scrollTo()).check(matches(isEnabled()));
+        assertEquals(1,driverPickups);assertEquals("Preparing",driverState.deliveries.get(0).order.status);
+        onView(withId(R.id.btnDriverRetry)).perform(scrollTo(),click());assertEquals(1,driverPickups);
     }
     private void verifyDriverExternalActions() {
         android.app.Instrumentation instrument=InstrumentationRegistry.getInstrumentation();
@@ -410,13 +497,18 @@ public class OrderingJourneyTest {
             case "driverDashboard":return driverOffline ? new IOException("Fixture offline") : driverState;
             case "driverClockIn":driverClockIns++;driverState.shift=new DriverModels.Shift();driverState.shift.id=99;
                 driverState.shift.state="ACTIVE";driverState.shift.clockedInAt=java.time.OffsetDateTime.now().toString();return driverState.shift;
-            case "driverClaim":DriverModels.Delivery delivery=new DriverModels.Delivery();delivery.assignmentId=1;delivery.state="ASSIGNED";
+            case "driverClaim":if(noDriverDelivery) return Response.error(404,okhttp3.ResponseBody.create(
+                    okhttp3.MediaType.get("application/json"),"{\"error\":\"No delivery is available right now.\"}"));
+                DriverModels.Delivery delivery=new DriverModels.Delivery();delivery.assignmentId=1;delivery.shiftId=99;delivery.state="ASSIGNED";
                 delivery.order=new DriverModels.Order();delivery.order.id=123;delivery.order.status="Preparing";
                 delivery.order.customerName="Fixture Customer";delivery.order.formattedAddress="12 Test Road, Cape Town";
                 delivery.order.phone="0800000000";delivery.order.gateAccessCode="fixture";delivery.order.notes="Ring bell";
                 driverState.deliveries.add(delivery);return driverState;
-            case "driverPickup":driverState.deliveries.get(0).state="PICKED_UP";return driverState;
-            case "driverDelivered":driverState.deliveries.get(0).state="DELIVERED";return driverState;
+            case "driverPickup":driverPickups++;driverState.deliveries.get(0).state="PICKED_UP";
+                driverState.deliveries.get(0).pickedUpAt=java.time.OffsetDateTime.now().toString();
+                return losePickupReply ? new IOException("Reply lost after pickup") : driverState;
+            case "driverDelivered":driverState.deliveries.get(0).state="DELIVERED";
+                driverState.deliveries.get(0).deliveredAt=java.time.OffsetDateTime.now().toString();return driverState;
             case "driverClockOut":driverClockOuts++;if(rejectClockOut)return new IOException("Clock-out failed before commit");
                 driverState.shift.state="CLOCKED_OUT";
                 driverState.shift.clockedOutAt=java.time.OffsetDateTime.now().toString();
@@ -444,7 +536,7 @@ public class OrderingJourneyTest {
         private final Object value;private final boolean deferred;private boolean executed,cancelled;
         FixtureCall(Object value,boolean deferred){this.value=value;this.deferred=deferred;}
         public Response<Object> execute(){executed=true;return Response.success(value);}
-        public void enqueue(Callback<Object> cb){executed=true;Runnable reply=() -> {if(!cancelled){if(value instanceof IOException)cb.onFailure(this,(IOException)value);else cb.onResponse(this,Response.success(value));}};if(deferred)pendingProfileReply=reply;else new Handler(Looper.getMainLooper()).post(reply);}
+        public void enqueue(Callback<Object> cb){executed=true;Runnable reply=() -> {if(!cancelled){if(value instanceof IOException)cb.onFailure(this,(IOException)value);else if(value instanceof Response)cb.onResponse(this,(Response<Object>)value);else cb.onResponse(this,Response.success(value));}};if(deferred)pendingProfileReply=reply;else new Handler(Looper.getMainLooper()).post(reply);}
         public boolean isExecuted(){return executed;}public void cancel(){cancelled=true;}public boolean isCanceled(){return cancelled;}
         public Call<Object> clone(){return new FixtureCall(value,deferred);}public Request request(){return new Request.Builder().url("https://test.invalid/").build();}
         public Timeout timeout(){return new Timeout();}

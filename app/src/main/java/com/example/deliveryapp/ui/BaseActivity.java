@@ -17,7 +17,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (!(this instanceof DriverActivity) && !(this instanceof StaffAccessActivity)
+        if (!(this instanceof DriverActivity) && !(this instanceof DriverHistoryActivity) && !(this instanceof StaffAccessActivity)
                 && !(this instanceof LoginActivity) && SessionRouter.redirectNonCustomer(this)) return;
         if (requiresLogin() && !Prefs.get().isLoggedIn()) {
             App.goToLogin();
