@@ -5,7 +5,7 @@
         android:gravity="center_horizontal" android:orientation="vertical"
         android:paddingStart="20dp" android:paddingEnd="20dp" android:paddingTop="28dp" android:paddingBottom="32dp">
         <com.google.android.material.button.MaterialButton
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.App.SecondaryTextButton"
             android:id="@+id/btnHome" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_gravity="start" android:text="← Home" android:textColor="@color/steel_blue" />
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -54,7 +54,7 @@
                     android:layout_height="56dp" android:layout_marginTop="20dp"
                     android:text="Log in" android:textStyle="bold" />
                 <com.google.android.material.button.MaterialButton
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="@style/Widget.App.SecondaryTextButton"
                     android:id="@+id/btnForgot" android:layout_width="match_parent"
                     android:layout_height="wrap_content" android:layout_marginTop="6dp"
                     android:text="Forgot password?" android:textColor="@color/steel_blue" />
@@ -63,7 +63,7 @@
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="24dp" android:gravity="center" android:text="New here?" />
         <com.google.android.material.button.MaterialButton
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.App.SecondaryButton"
             android:id="@+id/btnRegister" android:layout_width="match_parent"
             android:layout_height="56dp" android:layout_marginTop="8dp"
             android:text="Create an account" android:textStyle="bold" />
@@ -72,7 +72,7 @@
             android:gravity="center" android:textColor="?attr/colorOutline"
             android:textSize="12sp" android:text="Demo account: demo@delivery.app / Demo@1234" />
         <com.google.android.material.button.MaterialButton
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.App.SecondaryTextButton"
             android:id="@+id/btnDemo" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:text="Use demo account"
             android:textColor="@color/steel_blue" />

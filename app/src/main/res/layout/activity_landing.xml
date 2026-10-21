@@ -18,7 +18,7 @@
                 android:textStyle="bold" android:visibility="gone" />
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginTop="8dp" android:text="Fresh pizza, made for your neighbourhood."
-                android:textColor="#D9FFFFFF" android:textSize="15sp" />
+                android:textColor="@color/white_85" android:textSize="15sp" />
         </LinearLayout>
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -42,12 +42,12 @@
                         android:layout_width="match_parent" android:layout_height="56dp"
                         android:text="View menu" android:textStyle="bold" />
                     <com.google.android.material.button.MaterialButton
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.App.SecondaryButton"
                         android:id="@+id/btnLogin" android:layout_width="match_parent"
                         android:layout_height="56dp" android:layout_marginTop="8dp"
                         android:text="Login" android:textStyle="bold" />
                     <com.google.android.material.button.MaterialButton
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.App.SecondaryButton"
                         android:id="@+id/btnRegister" android:layout_width="match_parent"
                         android:layout_height="56dp" android:layout_marginTop="8dp"
                         android:text="Sign up" android:textStyle="bold" />
@@ -59,7 +59,7 @@
                         android:layout_width="match_parent" android:layout_height="56dp"
                         android:text="View menu &amp; order" android:textStyle="bold" />
                     <com.google.android.material.button.MaterialButton
-                        style="@style/Widget.Material3.Button.TextButton"
+                        style="@style/Widget.App.SecondaryTextButton"
                         android:id="@+id/btnLogout" android:layout_width="match_parent"
                         android:layout_height="wrap_content" android:text="Logout"
                         android:textColor="@color/steel_blue" />
@@ -80,12 +80,12 @@
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginTop="12dp" android:orientation="horizontal">
                 <com.google.android.material.button.MaterialButton
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.App.SecondaryButton"
                     android:id="@+id/btnKenridge" android:layout_width="0dp"
                     android:layout_height="56dp" android:layout_weight="1"
                     android:text="Kenridge" />
                 <com.google.android.material.button.MaterialButton
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.App.SecondaryButton"
                     android:id="@+id/btnUitzicht" android:layout_width="0dp"
                     android:layout_height="56dp" android:layout_marginStart="8dp"
                     android:layout_weight="1" android:text="Uitzicht" />
@@ -100,12 +100,12 @@
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <com.google.android.material.button.MaterialButton
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="@style/Widget.App.SecondaryTextButton"
                     android:id="@+id/btnKenridgeMap" android:layout_width="0dp"
                     android:layout_height="wrap_content" android:layout_weight="1"
                     android:text="Kenridge location" android:textColor="@color/steel_blue" />
                 <com.google.android.material.button.MaterialButton
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="@style/Widget.App.SecondaryTextButton"
                     android:id="@+id/btnUitzichtMap" android:layout_width="0dp"
                     android:layout_height="wrap_content" android:layout_marginStart="8dp"
                     android:layout_weight="1" android:text="Uitzicht location"

@@ -2,23 +2,27 @@
 <resources>
     <style name="Theme.DeliveryApp" parent="Theme.Material3.Dark.NoActionBar">
         <item name="materialButtonStyle">@style/Widget.App.PrimaryButton</item>
-        <item name="colorPrimary">@color/terracotta</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorPrimaryContainer">#5B2018</item>
-        <item name="colorOnPrimaryContainer">@color/white</item>
-        <item name="colorSecondary">@color/steel_blue</item>
-        <item name="colorOnSecondary">@color/white</item>
-        <item name="colorSecondaryContainer">#1F3F5A</item>
-        <item name="colorOnSecondaryContainer">@color/white</item>
-        <item name="colorTertiary">#D5D9DB</item>
-        <item name="colorSurface">#2B2F31</item>
-        <item name="colorOnSurface">#F1F3F4</item>
-        <item name="colorSurfaceVariant">@color/gunmetal</item>
-        <item name="colorOnSurfaceVariant">#E3E6E8</item>
-        <item name="colorOutline">#9AA1A5</item>
-        <item name="android:colorBackground">#212527</item>
-        <item name="android:textColorPrimary">#F1F3F4</item>
-        <item name="android:statusBarColor">@color/gunmetal</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.App.SecondaryButton</item>
+        <item name="colorPrimary">@color/brand_red_light</item>
+        <item name="colorOnPrimary">@color/surface</item>
+        <item name="colorPrimaryContainer">@color/brand_red_dark</item>
+        <item name="colorOnPrimaryContainer">@color/surface</item>
+        <item name="colorSecondary">@color/brand_blue_light</item>
+        <item name="colorOnSecondary">@color/surface</item>
+        <item name="colorSecondaryContainer">@color/brand_blue_dark</item>
+        <item name="colorOnSecondaryContainer">@color/surface</item>
+        <item name="colorTertiary">@color/neutral_light</item>
+        <item name="colorSurface">@color/neutral_dark</item>
+        <item name="colorOnSurface">@color/page_background</item>
+        <item name="colorSurfaceVariant">@color/neutral_primary</item>
+        <item name="colorOnSurfaceVariant">@color/neutral_border</item>
+        <item name="colorOutline">@color/neutral_light</item>
+        <item name="colorError">@color/brand_red_soft</item>
+        <item name="android:colorBackground">@color/neutral_dark</item>
+        <item name="android:textColorPrimary">@color/page_background</item>
+        <item name="android:statusBarColor">@color/brand_blue_dark</item>
+        <item name="android:navigationBarColor">@color/neutral_dark</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 </resources>

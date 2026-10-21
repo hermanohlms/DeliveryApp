@@ -6,13 +6,13 @@
         android:layout_marginBottom="8dp" android:textColor="?attr/colorError" android:textSize="13sp" android:visibility="gone" />
     <LinearLayout android:id="@+id/quantityRow" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:gravity="center_vertical" android:orientation="horizontal">
-        <com.google.android.material.button.MaterialButton style="@style/Widget.Material3.Button.TonalButton"
+        <com.google.android.material.button.MaterialButton style="@style/Widget.App.SecondaryTonalButton"
             android:id="@+id/btnMinus" android:layout_width="48dp" android:layout_height="48dp"
             android:insetLeft="0dp" android:insetRight="0dp" android:insetTop="0dp" android:insetBottom="0dp"
             android:minWidth="0dp" android:padding="0dp" android:text="–" android:contentDescription="Decrease quantity" android:textSize="20sp" />
         <TextView android:id="@+id/tvQty" android:layout_width="36dp" android:layout_height="wrap_content"
             android:gravity="center" android:text="1" android:textStyle="bold" />
-        <com.google.android.material.button.MaterialButton style="@style/Widget.Material3.Button.TonalButton"
+        <com.google.android.material.button.MaterialButton style="@style/Widget.App.SecondaryTonalButton"
             android:id="@+id/btnPlus" android:layout_width="48dp" android:layout_height="48dp"
             android:insetLeft="0dp" android:insetRight="0dp" android:insetTop="0dp" android:insetBottom="0dp"
             android:minWidth="0dp" android:padding="0dp" android:text="+" android:contentDescription="Increase quantity" android:textSize="20sp" />

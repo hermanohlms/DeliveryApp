@@ -20,7 +20,7 @@
                     <TextView android:id="@+id/tvDriverVehicle" android:layout_width="wrap_content" android:layout_height="wrap_content" />
                     <TextView android:id="@+id/tvDriverUpdated" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?attr/colorOutline" android:textSize="12sp" />
                 </LinearLayout>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnCall" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Call" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/btnCall" style="@style/Widget.App.SecondaryButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Call" />
             </LinearLayout>
             <TextView android:id="@+id/tvAddressTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textAppearance="@style/Text.Section" />
             <TextView android:id="@+id/tvAddress" android:layout_width="match_parent" android:layout_height="wrap_content" />

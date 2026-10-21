@@ -61,7 +61,7 @@
             <com.google.android.material.button.MaterialButton 
         android:id="@+id/btnSave" android:layout_width="match_parent" android:layout_height="56dp"
         android:layout_marginTop="16dp" android:text="Save details" android:textStyle="bold" />
-            <com.google.android.material.button.MaterialButton style="@style/Widget.Material3.Button.OutlinedButton"
+            <com.google.android.material.button.MaterialButton style="@style/Widget.App.SecondaryButton"
         android:id="@+id/btnLogout" android:layout_width="match_parent" android:layout_height="56dp"
         android:layout_marginTop="8dp" android:text="Log out" android:textStyle="bold" />
         </LinearLayout>

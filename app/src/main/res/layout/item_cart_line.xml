@@ -9,16 +9,16 @@
         <TextView android:id="@+id/tvNotes" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp"
             android:textSize="14sp" android:textColor="?attr/colorOnSurface"/>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-            <com.google.android.material.button.MaterialButton android:id="@+id/btnEdit" style="@style/Widget.Material3.Button.TextButton"
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnEdit" style="@style/Widget.App.SecondaryTextButton"
                 android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="48dp" android:text="Edit"/>
-            <com.google.android.material.button.MaterialButton android:id="@+id/btnRemove" style="@style/Widget.Material3.Button.TextButton"
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnRemove" style="@style/Widget.App.SecondaryTextButton"
                 android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="48dp" android:text="Remove" android:textColor="@color/steel_blue"/>
         </LinearLayout>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
-            <com.google.android.material.button.MaterialButton android:id="@+id/btnMinus" style="@style/Widget.Material3.Button.TonalButton"
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnMinus" style="@style/Widget.App.SecondaryTonalButton"
                 android:layout_width="48dp" android:layout_height="48dp" android:insetLeft="0dp" android:insetRight="0dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp" android:text="−" android:textSize="20sp"/>
             <TextView android:id="@+id/tvQty" android:layout_width="36dp" android:layout_height="wrap_content" android:gravity="center" android:textStyle="bold"/>
-            <com.google.android.material.button.MaterialButton android:id="@+id/btnPlus" style="@style/Widget.Material3.Button.TonalButton"
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnPlus" style="@style/Widget.App.SecondaryTonalButton"
                 android:layout_width="48dp" android:layout_height="48dp" android:insetLeft="0dp" android:insetRight="0dp" android:insetTop="0dp" android:insetBottom="0dp" android:minWidth="0dp" android:padding="0dp" android:text="+" android:textSize="20sp"/>
             <TextView android:id="@+id/tvLinePrice" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                 android:layout_marginStart="8dp" android:gravity="end" android:textSize="18sp" android:textStyle="bold"/>

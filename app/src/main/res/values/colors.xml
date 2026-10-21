@@ -1,15 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Theme colours from the palette -->
-    <color name="terracotta">#E94F37</color>
-    <color name="gunmetal">#393E41</color>
-    <color name="steel_blue">#3F88C5</color>
-    <!-- Supporting neutrals -->
-    <color name="white">#FFFFFF</color>
-    <color name="paper">#F6F7F8</color>
-    <color name="paper_variant">#E9ECEE</color>
-    <color name="terracotta_soft">#FFF1ED</color>
-    <color name="steel_blue_soft">#DDEBF7</color>
-    <color name="outline">#606B72</color>
-    <color name="error_red">#B3261E</color>
+    <!-- Shared product palette: matches the Online POS web application. -->
+    <color name="brand_red">#DC2626</color>
+    <color name="brand_red_dark">#991B1B</color>
+    <color name="brand_red_light">#EF4444</color>
+    <color name="brand_red_soft">#FCA5A5</color>
+    <color name="brand_red_tint">#FEE2E2</color>
+
+    <color name="brand_blue">#2563EB</color>
+    <color name="brand_blue_dark">#1E40AF</color>
+    <color name="brand_blue_light">#3B82F6</color>
+    <color name="brand_blue_soft">#93C5FD</color>
+    <color name="brand_blue_tint">#DBEAFE</color>
+
+    <color name="neutral_primary">#4B5563</color>
+    <color name="neutral_dark">#1F2937</color>
+    <color name="neutral_medium">#6B7280</color>
+    <color name="neutral_light">#9CA3AF</color>
+    <color name="neutral_border">#E5E7EB</color>
+    <color name="page_background">#F9FAFB</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="white_85">#D9FFFFFF</color>
+    <color name="white_70">#B3FFFFFF</color>
+
+    <!-- Semantic status colours remain independent of the brand palette. -->
+    <color name="success_green">#15803D</color>
+    <color name="warning_amber">#D97706</color>
+    <color name="error_red">#B91C1C</color>
+
+    <!-- Compatibility aliases keep existing layouts and Java code loosely coupled to the palette. -->
+    <color name="terracotta">@color/brand_red</color>
+    <color name="terracotta_soft">@color/brand_red_tint</color>
+    <color name="steel_blue">@color/brand_blue</color>
+    <color name="steel_blue_soft">@color/brand_blue_tint</color>
+    <color name="gunmetal">@color/neutral_dark</color>
+    <color name="outline">@color/neutral_medium</color>
+    <color name="paper">@color/page_background</color>
+    <color name="paper_variant">@color/neutral_border</color>
+    <color name="white">@color/surface</color>
 </resources>

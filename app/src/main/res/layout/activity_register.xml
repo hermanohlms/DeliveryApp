@@ -152,7 +152,7 @@
             <com.google.android.material.button.MaterialButton 
         android:id="@+id/btnCreate" android:layout_width="match_parent" android:layout_height="56dp"
         android:layout_marginTop="16dp" android:text="Create account" android:textStyle="bold" />
-            <com.google.android.material.button.MaterialButton style="@style/Widget.Material3.Button.TextButton"
+            <com.google.android.material.button.MaterialButton style="@style/Widget.App.SecondaryTextButton"
                 android:id="@+id/btnLoginLink" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginTop="8dp" android:text="Already have an account? Login" android:textColor="@color/steel_blue" />
         </LinearLayout>

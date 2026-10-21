@@ -12,6 +12,6 @@
             <TextView android:id="@+id/tvInfo" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textSize="15sp" android:lineSpacingExtra="4dp"/>
         </LinearLayout>
         <com.google.android.material.button.MaterialButton android:id="@+id/btnTrack" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp" android:layout_marginTop="24dp" android:text="Track order"/>
-        <com.google.android.material.button.MaterialButton android:id="@+id/btnDone" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp" android:layout_marginTop="8dp" android:text="Back to menu"/>
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnDone" style="@style/Widget.App.SecondaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp" android:layout_marginTop="8dp" android:text="Back to menu"/>
     </LinearLayout>
 </ScrollView>

@@ -18,7 +18,7 @@
             <TextView android:id="@+id/tvDriverConnection" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
             <TextView android:id="@+id/tvDriverError" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginTop="8dp" android:textColor="?attr/colorError" android:accessibilityLiveRegion="polite" android:visibility="gone" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/btnDriverRetry" style="@style/Widget.Material3.Button.OutlinedButton"
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnDriverRetry" style="@style/Widget.App.SecondaryButton"
                 android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp" android:text="Refresh shift" />
             <com.google.android.material.button.MaterialButton android:id="@+id/btnDriverClaim" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:minHeight="56dp" android:text="Claim next delivery" android:enabled="false" />
@@ -28,7 +28,7 @@
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp"
                 android:text="Completed deliveries" android:textAppearance="@style/Text.Section" />
             <LinearLayout android:id="@+id/driverCompleted" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/btnDriverEnd" style="@style/Widget.Material3.Button.OutlinedButton"
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnDriverEnd" style="@style/Widget.App.SecondaryButton"
                 android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp"
                 android:minHeight="56dp" android:text="End shift &amp; sign out" android:enabled="false" />
         </LinearLayout>

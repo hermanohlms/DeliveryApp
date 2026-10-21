@@ -12,7 +12,7 @@
                 android:layout_height="wrap_content" android:layout_gravity="center_horizontal" />
             <TextView android:id="@+id/tvError" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:visibility="gone" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/btnRetry" style="@style/Widget.Material3.Button.OutlinedButton"
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnRetry" style="@style/Widget.App.SecondaryButton"
                 android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Try again" android:visibility="gone"/>
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Build your bundle"
                 android:textAppearance="@style/Text.Page" android:layout_marginBottom="8dp"/>

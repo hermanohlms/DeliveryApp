@@ -2,33 +2,56 @@
 <resources>
     <style name="Theme.DeliveryApp" parent="Theme.Material3.Light.NoActionBar">
         <item name="materialButtonStyle">@style/Widget.App.PrimaryButton</item>
-        <item name="colorPrimary">@color/terracotta</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorPrimaryContainer">@color/terracotta_soft</item>
-        <item name="colorOnPrimaryContainer">@color/gunmetal</item>
-        <item name="colorSecondary">@color/steel_blue</item>
-        <item name="colorOnSecondary">@color/white</item>
-        <item name="colorSecondaryContainer">@color/steel_blue_soft</item>
-        <item name="colorOnSecondaryContainer">@color/gunmetal</item>
-        <item name="colorTertiary">@color/gunmetal</item>
-        <item name="colorSurface">@color/white</item>
-        <item name="colorOnSurface">@color/gunmetal</item>
-        <item name="colorSurfaceVariant">@color/paper_variant</item>
-        <item name="colorOnSurfaceVariant">@color/gunmetal</item>
-        <item name="colorOutline">@color/outline</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.App.SecondaryButton</item>
+        <item name="colorPrimary">@color/brand_red</item>
+        <item name="colorOnPrimary">@color/surface</item>
+        <item name="colorPrimaryContainer">@color/brand_red_tint</item>
+        <item name="colorOnPrimaryContainer">@color/neutral_dark</item>
+        <item name="colorSecondary">@color/brand_blue</item>
+        <item name="colorOnSecondary">@color/surface</item>
+        <item name="colorSecondaryContainer">@color/brand_blue_tint</item>
+        <item name="colorOnSecondaryContainer">@color/neutral_dark</item>
+        <item name="colorTertiary">@color/neutral_primary</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/neutral_dark</item>
+        <item name="colorSurfaceVariant">@color/neutral_border</item>
+        <item name="colorOnSurfaceVariant">@color/neutral_medium</item>
+        <item name="colorOutline">@color/neutral_medium</item>
         <item name="colorError">@color/error_red</item>
-        <item name="android:colorBackground">@color/paper</item>
-        <item name="android:textColorPrimary">@color/gunmetal</item>
-        <item name="android:statusBarColor">@color/gunmetal</item>
+        <item name="android:colorBackground">@color/page_background</item>
+        <item name="android:textColorPrimary">@color/neutral_dark</item>
+        <item name="android:statusBarColor">@color/brand_blue_dark</item>
+        <item name="android:navigationBarColor">@color/page_background</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 
     <style name="Widget.App.PrimaryButton" parent="Widget.Material3.Button">
-        <item name="cornerRadius">12dp</item><item name="android:textSize">15sp</item>
-        <item name="android:minHeight">56dp</item><item name="android:textStyle">bold</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="backgroundTint">@color/brand_red</item>
+        <item name="android:textColor">@color/surface</item>
+    </style>
+    <style name="Widget.App.SecondaryButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="cornerRadius">12dp</item>
+        <item name="strokeColor">@color/brand_blue</item>
+        <item name="android:textColor">@color/brand_blue</item>
+        <item name="iconTint">@color/brand_blue</item>
+    </style>
+    <style name="Widget.App.SecondaryTextButton" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">@color/brand_blue</item>
+        <item name="iconTint">@color/brand_blue</item>
+    </style>
+    <style name="Widget.App.SecondaryTonalButton" parent="Widget.Material3.Button.TonalButton">
+        <item name="backgroundTint">@color/brand_blue_tint</item>
+        <item name="android:textColor">@color/brand_blue_dark</item>
+        <item name="iconTint">@color/brand_blue_dark</item>
     </style>
     <style name="Text.Page" parent="TextAppearance.Material3.HeadlineMedium">
-        <item name="android:textColor">?attr/colorOnSurface</item><item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
     </style>
     <style name="Widget.App.Chip" parent="Widget.Material3.Chip.Filter">
         <item name="chipBackgroundColor">@color/chip_bg</item>
@@ -36,13 +59,11 @@
         <item name="chipStrokeWidth">0dp</item>
         <item name="checkedIconVisible">false</item>
     </style>
-
     <style name="Widget.App.Toolbar" parent="Widget.Material3.Toolbar">
-        <item name="android:background">@color/gunmetal</item>
-        <item name="titleTextColor">@color/white</item>
-        <item name="navigationIconTint">@color/white</item>
+        <item name="android:background">@color/brand_blue_dark</item>
+        <item name="titleTextColor">@color/surface</item>
+        <item name="navigationIconTint">@color/surface</item>
     </style>
-
     <style name="Text.Section" parent="TextAppearance.Material3.TitleMedium">
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
