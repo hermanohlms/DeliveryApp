@@ -47,9 +47,9 @@
                         android:layout_height="56dp" android:layout_marginTop="8dp"
                         android:text="Login" android:textStyle="bold" />
                     <com.google.android.material.button.MaterialButton
-                        style="@style/Widget.Material3.Button.TextButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
                         android:id="@+id/btnRegister" android:layout_width="match_parent"
-                        android:layout_height="52dp" android:layout_marginTop="4dp"
+                        android:layout_height="56dp" android:layout_marginTop="8dp"
                         android:text="Sign up" android:textStyle="bold" />
                 </LinearLayout>
                 <LinearLayout android:id="@+id/memberActions" android:layout_width="match_parent"
@@ -97,16 +97,20 @@
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:text="Find us" android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                 android:textStyle="bold" />
-            <com.google.android.material.button.MaterialButton
-                style="@style/Widget.Material3.Button.TextButton"
-                android:id="@+id/btnKenridgeMap" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:text="Kenridge location"
-                android:textColor="@color/steel_blue" />
-            <com.google.android.material.button.MaterialButton
-                style="@style/Widget.Material3.Button.TextButton"
-                android:id="@+id/btnUitzichtMap" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:text="Uitzicht location"
-                android:textColor="@color/steel_blue" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <com.google.android.material.button.MaterialButton
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:id="@+id/btnKenridgeMap" android:layout_width="0dp"
+                    android:layout_height="wrap_content" android:layout_weight="1"
+                    android:text="Kenridge location" android:textColor="@color/steel_blue" />
+                <com.google.android.material.button.MaterialButton
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:id="@+id/btnUitzichtMap" android:layout_width="0dp"
+                    android:layout_height="wrap_content" android:layout_marginStart="8dp"
+                    android:layout_weight="1" android:text="Uitzicht location"
+                    android:textColor="@color/steel_blue" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </ScrollView>
