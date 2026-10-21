@@ -224,6 +224,21 @@ public class OrderingJourneyTest {
         });
         scenario=ActivityScenario.launch(LandingActivity.class);
         onView(withText("Manager and admin accounts use the staff web app.")).check(matches(isDisplayed()));
+        List<android.content.Intent> opened=new ArrayList<>();
+        android.app.Instrumentation instrument=InstrumentationRegistry.getInstrumentation();
+        android.app.Instrumentation.ActivityMonitor monitor=new android.app.Instrumentation.ActivityMonitor() {
+            @Override public android.app.Instrumentation.ActivityResult onStartActivity(android.content.Intent intent) {
+                if(android.content.Intent.ACTION_VIEW.equals(intent.getAction())) {
+                    opened.add(intent);return new android.app.Instrumentation.ActivityResult(Activity.RESULT_CANCELED,null);
+                }
+                return null;
+            }
+        };
+        instrument.addMonitor(monitor);
+        try {
+            onView(withText("Open staff web app")).perform(click());
+            assertEquals("https://crowdcam.co.za/admin/login",opened.get(0).getDataString());
+        } finally { instrument.removeMonitor(monitor); }
     }
 
     @Test public void burgerGroupingEditCancelSaveAndRotation() throws Exception {

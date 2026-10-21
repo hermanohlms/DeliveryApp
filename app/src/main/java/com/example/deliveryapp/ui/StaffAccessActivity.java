@@ -5,7 +5,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import com.example.deliveryapp.BuildConfig;
 import com.example.deliveryapp.data.AccountRole;
 import com.example.deliveryapp.data.Prefs;
 import com.example.deliveryapp.data.Repo;
@@ -20,7 +19,7 @@ public class StaffAccessActivity extends BaseActivity {
         message.setText("Manager and admin accounts use the staff web app."); message.setTextSize(22); box.addView(message);
         MaterialButton web = new MaterialButton(this); web.setText("Open staff web app"); box.addView(web);
         web.setOnClickListener(v -> {
-            try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.API_BASE_URL + "admin/login"))); }
+            try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://crowdcam.co.za/admin/login"))); }
             catch (android.content.ActivityNotFoundException e) { Ui.toast(this, "No browser is available."); }
         });
         MaterialButton logout = new MaterialButton(this); logout.setText("Sign out"); box.addView(logout);
