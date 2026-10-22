@@ -37,7 +37,7 @@ public class CheckoutActivity extends BaseActivity {
     private AddressPickerView address;
     private View deliveryGroup;
     private Chip chipDelivery, chipPayFast, chipCash;
-    private TextView tvMessage, tvPriceNote;
+    private TextView tvMessage;
     private MaterialButton btnPlace;
 
     private String lastKey;
@@ -80,7 +80,6 @@ public class CheckoutActivity extends BaseActivity {
         chipPayFast = findViewById(R.id.chipPayFast);
         chipCash = findViewById(R.id.chipCash);
         tvMessage = findViewById(R.id.tvMessage);
-        tvPriceNote = findViewById(R.id.tvPriceNote);
         btnPlace = findViewById(R.id.btnPlace);
 
         ((Chip) findViewById(R.id.chipPickup)).setText("Pick up at " + Prefs.get().getBranch().displayName);
@@ -173,9 +172,6 @@ public class CheckoutActivity extends BaseActivity {
     private void updateTotal() {
         chipCash.setText(chipDelivery.isChecked() ? "Cash on delivery" : "Pay at the counter");
         ((TextView)findViewById(R.id.tvCheckoutSubtotal)).setText(Money.rand(Cart.get().total()));
-        tvPriceNote.setText(payOnline()
-                ? (chipDelivery.isChecked() ? "Delivery charge is not included above. " : "") + "PayFast confirms the exact total before payment."
-                : (chipDelivery.isChecked() ? "Delivery charge is not included above. The restaurant confirms it when accepting your order." : "Pickup from " + Prefs.get().getBranch().displayName + ". The restaurant confirms your final total."));
         btnPlace.setText((payOnline() ? "Pay with PayFast · " : "Place order · ") + Money.rand(Cart.get().total()));
     }
 

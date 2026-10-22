@@ -24,7 +24,9 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.BooleanSupplier;
 
 public class PizzaDetailActivity extends BaseActivity {
@@ -221,11 +223,24 @@ public class PizzaDetailActivity extends BaseActivity {
         for (Models.ToppingItem t : Models.nz(d.allToppings)) if (!defaultIds.contains(t.toppingId)) extraList.add(t);
         Ui.show(lblExtras, !extraList.isEmpty());
         Ui.show(extrasBox, !extraList.isEmpty());
-        for (final Models.ToppingItem t : extraList) {
-            CompoundButton row = Ui.choiceRow(this, t.name, extraPrice(t.toppingId), false, true);
-            row.setOnClickListener(v -> { selection.toggle(t); sync(); });
-            bindings.add(new Binding(row, () -> selection.isSelected(t.toppingId)));
-            extrasBox.addView(row);
+        Map<Long, List<Models.ToppingItem>> priceGroups = new TreeMap<>();
+        for (Models.ToppingItem topping : extraList) {
+            long cents = Math.max(0, Math.round(extraPrice(topping.toppingId) * 100));
+            priceGroups.computeIfAbsent(cents, ignored -> new ArrayList<>()).add(topping);
+        }
+        for (Map.Entry<Long, List<Models.ToppingItem>> group : priceGroups.entrySet()) {
+            TextView heading = new TextView(this);
+            heading.setText(group.getKey() == 0 ? "Included" : Money.rand(group.getKey() / 100.0));
+            heading.setTextAppearance(R.style.Text_Section);
+            heading.setPadding(0, Ui.dp(this, 12), 0, Ui.dp(this, 4));
+            androidx.core.view.ViewCompat.setAccessibilityHeading(heading, true);
+            extrasBox.addView(heading);
+            for (final Models.ToppingItem topping : group.getValue()) {
+                CompoundButton row = Ui.choiceRow(this, topping.name, extraPrice(topping.toppingId), false, true);
+                row.setOnClickListener(v -> { selection.toggle(topping); sync(); });
+                bindings.add(new Binding(row, () -> selection.isSelected(topping.toppingId)));
+                extrasBox.addView(row);
+            }
         }
 
         Ui.show(progress, false);

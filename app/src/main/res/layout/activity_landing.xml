@@ -20,23 +20,18 @@
                 android:layout_marginTop="8dp" android:text="Fresh pizza, made for your neighbourhood."
                 android:textColor="@color/white_85" android:textSize="15sp" />
         </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_weight="1" android:gravity="center" android:orientation="vertical"
+            android:paddingTop="16dp" android:paddingBottom="16dp">
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginStart="20dp" android:layout_marginEnd="20dp"
-            android:layout_marginTop="16dp" app:cardBackgroundColor="?attr/colorSurface"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="18dp" app:cardElevation="4dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:orientation="vertical" android:padding="20dp">
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:text="Your local pizza starts here"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-                    android:textStyle="bold" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="Browse a branch menu or sign in to place an order."
-                    android:textColor="?attr/colorOnSurfaceVariant" />
                 <LinearLayout android:id="@+id/guestActions" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginTop="20dp"
+                    android:layout_height="wrap_content"
                     android:orientation="vertical">
                     <com.google.android.material.button.MaterialButton android:id="@+id/btnViewMenu"
                         android:layout_width="match_parent" android:layout_height="56dp"
@@ -53,19 +48,20 @@
                         android:text="Sign up" android:textStyle="bold" />
                 </LinearLayout>
                 <LinearLayout android:id="@+id/memberActions" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginTop="20dp"
+                    android:layout_height="wrap_content"
                     android:orientation="vertical" android:visibility="gone">
                     <com.google.android.material.button.MaterialButton android:id="@+id/btnOrder"
                         android:layout_width="match_parent" android:layout_height="56dp"
                         android:text="View menu &amp; order" android:textStyle="bold" />
                     <com.google.android.material.button.MaterialButton
-                        style="@style/Widget.App.SecondaryTextButton"
+                        style="@style/Widget.App.SecondaryButton"
                         android:id="@+id/btnLogout" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Logout"
-                        android:textColor="@color/steel_blue" />
+                        android:layout_height="56dp" android:layout_marginTop="8dp"
+                        android:text="Logout" android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
         <LinearLayout android:id="@+id/branchChoice" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp" android:layout_marginTop="24dp"

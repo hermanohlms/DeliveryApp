@@ -24,10 +24,6 @@
                     android:gravity="center" android:text="Welcome back"
                     android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
                     android:textStyle="bold" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp" android:gravity="center"
-                    android:text="Log in to order from your local branch."
-                    android:textColor="?attr/colorOnSurfaceVariant" />
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent" android:layout_height="wrap_content"

@@ -52,7 +52,6 @@
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Estimated subtotal" android:textStyle="bold" />
             <TextView android:id="@+id/tvCheckoutSubtotal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textStyle="bold" android:textSize="18sp" />
         </LinearLayout>
-        <TextView android:id="@+id/tvPriceNote" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="The restaurant confirms the final price (including any delivery charge) when it accepts your order." android:textColor="?attr/colorOutline" android:textSize="12sp" />
         <com.google.android.material.button.MaterialButton android:id="@+id/btnPlace" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Place order" android:textStyle="bold" android:minHeight="56dp" />
     </LinearLayout>
 </LinearLayout>
